@@ -13,16 +13,18 @@ import static org.junit.jupiter.api.Assertions.*;
 class UserControllerTest {
 
     private UserController userController;
+    private User userTest;
 
     @BeforeEach
     void setUp() {
         userController = new UserController();
+        userTest = new User(null, "mail@mail.com",
+                "login", "name", LocalDate.of(2000, 1, 1));
     }
 
     @Test
     void createUser() {
-        User createUser = userController.createUser(new User(-1, "mail@mail.com",
-                "login", "name", LocalDate.of(2000, 1, 1)));
+        User createUser = userController.createUser(userTest);
         assertEquals(1, createUser.getId(), "Неверный Id пользователя");
         assertEquals("mail@mail.com", createUser.getEmail(), "Неверный email пользователя");
         assertEquals("login", createUser.getLogin(), "Неверный логин пользователя");
@@ -32,74 +34,74 @@ class UserControllerTest {
 
     @Test
     void shouldReturnErrorEmptyEmail() {
+        userTest.setEmail(null);
         ValidationException ex = assertThrows(ValidationException.class, new Executable() {
             @Override
             public void execute() throws Throwable {
-                User createUser = userController.createUser(new User(-1, "",
-                        "login", "name", LocalDate.of(2000, 1, 1)));
+                userController.createUser(userTest);
             }
         });
         assertEquals("Некорректный адрес электронной почты",
-                ex.getMessage(), "Проверке валидации по пустой электронной почте");
+                ex.getMessage(), "Проверка валидации по пустой электронной почте");
     }
 
     @Test
     void shouldReturnErrorInvalidEmail() {
+        userTest.setEmail("mail.com");
         ValidationException ex = assertThrows(ValidationException.class, new Executable() {
             @Override
             public void execute() throws Throwable {
-                User createUser = userController.createUser(new User(-1, "mail.com",
-                        "login", "name", LocalDate.of(2000, 1, 1)));
+                userController.createUser(userTest);
             }
         });
         assertEquals("Некорректный адрес электронной почты",
-                ex.getMessage(), "Проверке валидации по содержанию @ в электронной почте");
+                ex.getMessage(), "Проверка валидации по содержанию @ в электронной почте");
     }
 
     @Test
     void shouldReturnErrorEmptyLogin() {
+        userTest.setLogin(null);
         ValidationException ex = assertThrows(ValidationException.class, new Executable() {
             @Override
             public void execute() throws Throwable {
-                User createUser = userController.createUser(new User(-1, "mail@mail.com",
-                        "", "name", LocalDate.of(2000, 1, 1)));
+                userController.createUser(userTest);
             }
         });
         assertEquals("Логин не может быть пустым или содержать пробелы",
-                ex.getMessage(), "Проверке валидации по пустому логину");
+                ex.getMessage(), "Проверка валидации по пустому логину");
     }
 
     @Test
     void shouldReturnErrorInvalidLogin() {
+        userTest.setLogin("login login");
         ValidationException ex = assertThrows(ValidationException.class, new Executable() {
             @Override
             public void execute() throws Throwable {
-                User createUser = userController.createUser(new User(-1, "mail@mail.com",
-                        "login login", "name", LocalDate.of(2000, 1, 1)));
+                userController.createUser(userTest);
             }
         });
         assertEquals("Логин не может быть пустым или содержать пробелы",
-                ex.getMessage(), "Проверке валидации по пробелам в логине");
+                ex.getMessage(), "Проверка валидации по пробелам в логине");
     }
 
     @Test
     void shouldReplaceNameWithLogin() {
-        User createUser = userController.createUser(new User(-1, "mail@mail.com",
-                "login", "", LocalDate.of(2000, 1, 1)));
+        userTest.setName(null);
+        User createUser = userController.createUser(userTest);
         assertEquals("login", createUser.getName(), "Неверное имя пользователя");
     }
 
     @Test
     void shouldReturnErrorInvalidBirthday() {
+        userTest.setBirthday(LocalDate.of(2100, 1, 1));
         ValidationException ex = assertThrows(ValidationException.class, new Executable() {
             @Override
             public void execute() throws Throwable {
-                User createUser = userController.createUser(new User(-1, "mail@mail.com",
-                        "login", "name", LocalDate.of(2100, 1, 1)));
+                userController.createUser(userTest);
             }
         });
         assertEquals("Дата рождения не может быть в будущем",
-                ex.getMessage(), "Проверке валидации по дате рождения");
+                ex.getMessage(), "Проверка валидации по дате рождения");
     }
 
 }

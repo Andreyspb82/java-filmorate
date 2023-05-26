@@ -13,77 +13,76 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FilmControllerTest {
 
-    FilmController filmController;
+    private FilmController filmController;
+    private Film filmTest;
 
     @BeforeEach
     void setUp() {
         filmController = new FilmController();
+        filmTest = new Film(null, "name", "description",
+                LocalDate.of(2000, 1, 1), 60);
     }
 
     @Test
     void createFilm() {
-        Film createFilm = filmController.createFilm(new Film(-1, "name", "description",
-                LocalDate.of(2000, 1, 1), 60));
-        assertEquals(1, createFilm.getId(), "Неверный Id фильма");
-        assertEquals("name", createFilm.getName(), "Неверное название фильма");
-        assertEquals("description", createFilm.getDescription(), "Неверное описание фильма");
-        assertEquals(LocalDate.of(2000, 1, 1), createFilm.getReleaseDate(), "Неверная дата релиза");
-        assertEquals(60, createFilm.getDuration(), "Неверная продолжительность фильма");
+        Film createFilm = filmController.createFilm(filmTest);
+        assertEquals(1, filmTest.getId(), "Неверный Id фильма");
+        assertEquals("name", filmTest.getName(), "Неверное название фильма");
+        assertEquals("description", filmTest.getDescription(), "Неверное описание фильма");
+        assertEquals(LocalDate.of(2000, 1, 1), filmTest.getReleaseDate(), "Неверная дата релиза");
+        assertEquals(60, filmTest.getDuration(), "Неверная продолжительность фильма");
     }
 
     @Test
     void shouldReturnErrorEmptyName() {
+        filmTest.setName(null);
         ValidationException ex = assertThrows(ValidationException.class, new Executable() {
             @Override
             public void execute() throws Throwable {
-                Film createFilm = filmController.createFilm(new Film(-1, "", "description",
-                        LocalDate.of(2000, 1, 1), 60));
+                filmController.createFilm(filmTest);
             }
         });
         assertEquals("Название фильма не может быть пустым",
-                ex.getMessage(), "Проверке валидации на пустое имя фильма");
+                ex.getMessage(), "Проверка валидации на пустое имя фильма");
     }
 
     @Test
     void shouldReturnErrorDescription() {
+        filmTest.setDescription("a".repeat(201));
         ValidationException ex = assertThrows(ValidationException.class, new Executable() {
             @Override
             public void execute() throws Throwable {
-                Film createFilm = filmController.createFilm(new Film(-1, "name", "Пятеро друзей" +
-                        "( комик-группа «Шарло»), приезжают в город Бризуль. Здесь они хотят разыскать господина" +
-                        " Огюста Куглова, который задолжал им деньги, а именно 20 миллионов. о Куглов, который" +
-                        " за время «своего отсутствия», стал кандидатом Коломбани.",
-                        LocalDate.of(2000, 1, 1), 60));
+                filmController.createFilm(filmTest);
             }
         });
         assertEquals("Описание фильма не должно превышать 200 символов",
-                ex.getMessage(), "Проверке валидации на количество символов в описании");
+                ex.getMessage(), "Проверка валидации на количество символов в описании");
     }
 
     @Test
     void shouldReturnErrorRelease() {
+        filmTest.setReleaseDate(LocalDate.of(1895, 12, 27));
         ValidationException ex = assertThrows(ValidationException.class, new Executable() {
             @Override
             public void execute() throws Throwable {
-                Film createFilm = filmController.createFilm(new Film(-1, "name", "description",
-                        LocalDate.of(1895, 12, 27), 60));
+                filmController.createFilm(filmTest);
             }
         });
         assertEquals("Дата релиза фильма должна быть не раньше чем 28 декабря 1895 года",
-                ex.getMessage(), "Проверке валидации на дату релиза фильма");
+                ex.getMessage(), "Проверка валидации на дату релиза фильма");
     }
 
     @Test
     void shouldReturnErrorDuration() {
+        filmTest.setDuration(-1);
         ValidationException ex = assertThrows(ValidationException.class, new Executable() {
             @Override
             public void execute() throws Throwable {
-                Film createFilm = filmController.createFilm(new Film(-1, "name", "description",
-                        LocalDate.of(2000, 1, 1), -1));
+                filmController.createFilm(filmTest);
             }
         });
         assertEquals("Продолжительность фильма должна быть положительной",
-                ex.getMessage(), "Проверке валидации на продолжительность фильма");
+                ex.getMessage(), "Проверка валидации на продолжительность фильма");
     }
 
 }
