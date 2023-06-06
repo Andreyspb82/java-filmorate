@@ -3,8 +3,11 @@ package ru.yandex.practicum.filmorate.controller;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 
@@ -17,7 +20,9 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        userController = new UserController();
+        InMemoryUserStorage userStorage = new InMemoryUserStorage();
+        UserService userService = new UserService(userStorage);
+        userController = new UserController(userService);
         userTest = new User(null, "mail@mail.com",
                 "login", "name", LocalDate.of(2000, 1, 1));
     }
@@ -102,6 +107,34 @@ class UserControllerTest {
         });
         assertEquals("Дата рождения не может быть в будущем",
                 ex.getMessage(), "Проверка валидации по дате рождения");
+    }
+
+    @Test
+    void shouldReturnUserById() {
+        User createUser = userController.createUser(userTest);
+        User userId = userController.getUserId(1);
+        assertEquals(createUser, userId, "Пользователи на совпадают");
+    }
+
+    @Test
+    void shouldReturnErrorInvalidUserId() {
+        User createUser = userController.createUser(userTest);
+        NotFoundException ex = assertThrows(NotFoundException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                User user = userController.getUserId(2);
+            }
+        });
+        assertEquals("Пользователя с таким Id нет",
+                ex.getMessage(), "Проверка получения пользователя по несуществующему Id");
+    }
+
+    @Test
+    void shouldRemoveUserById() {
+        User createUser = userController.createUser(userTest);
+        assertFalse(userController.getUsers().isEmpty(), "Список пользователей пустой");
+        userController.removeUserId(1);
+        assertTrue(userController.getUsers().isEmpty(), "Список пользователей не пустой");
     }
 
 }
