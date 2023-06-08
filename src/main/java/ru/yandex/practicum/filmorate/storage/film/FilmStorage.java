@@ -16,5 +16,4 @@ public interface FilmStorage {
 
     void removeFilmId(int id);
 
-
 }
