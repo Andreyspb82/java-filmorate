@@ -3,22 +3,30 @@ package ru.yandex.practicum.filmorate.controller;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class FilmControllerTest {
-
     private FilmController filmController;
     private Film filmTest;
 
     @BeforeEach
     void setUp() {
-        filmController = new FilmController();
+        InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
+        InMemoryUserStorage userStorage = new InMemoryUserStorage();
+        UserService userService = new UserService(userStorage);
+        FilmService filmService = new FilmService(filmStorage, userService);
+
+        filmController = new FilmController(filmService);
         filmTest = new Film(null, "name", "description",
                 LocalDate.of(2000, 1, 1), 60);
     }
@@ -83,6 +91,34 @@ class FilmControllerTest {
         });
         assertEquals("Продолжительность фильма должна быть положительной",
                 ex.getMessage(), "Проверка валидации на продолжительность фильма");
+    }
+
+    @Test
+    void shouldReturnFilmById() {
+        Film createFilm = filmController.createFilm(filmTest);
+        Film filmId = filmController.getFilmId(1);
+        assertEquals(createFilm, filmId, "Фильмы на совпадают");
+    }
+
+    @Test
+    void shouldReturnErrorInvalidFilmId() {
+        Film createFilm = filmController.createFilm(filmTest);
+        NotFoundException ex = assertThrows(NotFoundException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                filmController.getFilmId(2);
+            }
+        });
+        assertEquals("Фильма с таким Id нет",
+                ex.getMessage(), "Проверка получения фильма по несуществующему Id");
+    }
+
+    @Test
+    void shouldRemoveFilmById() {
+        Film createFilm = filmController.createFilm(filmTest);
+        assertFalse(filmController.getFilms().isEmpty(), "Список фильмов пустой");
+        filmController.removeFilmId(1);
+        assertTrue(filmController.getFilms().isEmpty(), "Список фильмов не пустой");
     }
 
 }
