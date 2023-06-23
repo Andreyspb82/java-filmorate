@@ -1,7 +1,7 @@
 # java-filmorate
 Template repository for Filmorate project.
 
-#Диаграмма базы данных
+# Диаграмма базы данных
 ![ER-диаграмма](https://github.com/Andreyspb82/java-filmorate/blob/add-database/Untitled%20(2).png)
 ---
 ## Таблица *films* содержит данные о фильмах
