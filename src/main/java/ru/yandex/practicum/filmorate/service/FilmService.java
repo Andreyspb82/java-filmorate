@@ -3,8 +3,10 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
@@ -24,15 +26,9 @@ public class FilmService {
 
     private static final LocalDate EARLIEST_AVAILABLE_DATE = LocalDate.of(1895, 12, 28);
 
-    private int filmId = 0;
-
-    private int getNextId() {
-        return ++filmId;
-    }
-
     public Film createFilm(Film film) {
         validationFilm(film);
-        film.setId(getNextId());
+        //  film.setId(getNextId());
         return filmStorage.putFilm(film);
     }
 
@@ -54,32 +50,37 @@ public class FilmService {
     }
 
     public void addLikeFilm(int filmId, int userId) {
-        Film film = getFilmId(filmId);
-        User user = userService.getUserId(userId);
-        film.addLike(user.getId());
-        filmStorage.updateFilm(film);
+        filmStorage.getFilmId(filmId);
+        userService.getUserId(userId);
+
+        filmStorage.addLikeFilm(filmId, userId);
     }
 
     public void removeLikeFilm(int filmId, int userId) {
-        Film film = getFilmId(filmId);
-        User user = userService.getUserId(userId);
-        film.removeLike(user.getId());
-        filmStorage.updateFilm(film);
+        filmStorage.getFilmId(filmId);
+        userService.getUserId(userId);
+        filmStorage.removeLikeFilm(filmId, userId);
     }
 
     public List<Film> ratingFilms(int count) {
         List<Film> ratingFilms = new ArrayList<>(filmStorage.getFilms());
 
+        if (ratingFilms.isEmpty()) {
+            log.warn("Список пустой");
+            throw new NotFoundException("Список пустой");
+        }
+
         Collections.sort(ratingFilms, new Comparator<Film>() {
             @Override
             public int compare(Film o1, Film o2) {
-                return o2.getLike().size() - o1.getLike().size();
+                return o2.getRate() - o1.getRate();
             }
         });
 
         return ratingFilms.stream()
                 .limit(count)
                 .collect(Collectors.toList());
+
     }
 
 
@@ -102,6 +103,5 @@ public class FilmService {
     private void logValidationFilm() {
         log.warn("Валидация фильма не пройдена");
     }
-
 
 }

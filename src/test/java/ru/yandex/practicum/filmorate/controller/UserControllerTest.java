@@ -18,14 +18,14 @@ class UserControllerTest {
     private UserController userController;
     private User userTest;
 
-    @BeforeEach
-    void setUp() {
-        InMemoryUserStorage userStorage = new InMemoryUserStorage();
-        UserService userService = new UserService(userStorage);
-        userController = new UserController(userService);
-        userTest = new User(null, "mail@mail.com",
-                "login", "name", LocalDate.of(2000, 1, 1));
-    }
+//    @BeforeEach
+//    void setUp() {
+//        InMemoryUserStorage userStorage = new InMemoryUserStorage();
+//        UserService userService = new UserService(userStorage);
+//        userController = new UserController(userService);
+//        userTest = new User(null, "mail@mail.com",
+//                "login", "name", LocalDate.of(2000, 1, 1));
+//    }
 
     @Test
     void createUser() {

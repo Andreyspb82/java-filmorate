@@ -2,33 +2,29 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @Slf4j
 @Data
 public class UserService {
+
+    //@Autowired
+    @Qualifier("userDbStorage")
     private final UserStorage userStorage;
-
-    private int userId = 0;
-
-    private int getNextId() {
-        return ++userId;
-    }
 
     public User createUser(User user) {
         validationUser(user);
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
-        user.setId(getNextId());
         return userStorage.putUser(user);
     }
 
@@ -53,61 +49,30 @@ public class UserService {
     }
 
     public void addFriendId(int userId, int friendId) {
-        User user = userStorage.getUserId(userId);
-        User userFriend = userStorage.getUserId(friendId);
+        userStorage.getUserId(userId);
+        userStorage.getUserId(friendId);
 
-        user.addFriend(friendId);
-        userFriend.addFriend(userId);
-
-        userStorage.updateUser(user);
-        userStorage.updateUser(userFriend);
+        userStorage.addFriendId(userId, friendId);
     }
 
     public void removeFriendId(int userId, int friendId) {
-        User user = userStorage.getUserId(userId);
-        User userFriend = userStorage.getUserId(friendId);
+        userStorage.getUserId(userId);
+        userStorage.getUserId(friendId);
 
-        user.removeFriend(friendId);
-        userFriend.removeFriend(userId);
+        userStorage.removeFriendId(userId, friendId);
 
-        userStorage.updateUser(user);
-        userStorage.updateUser(userFriend);
     }
 
     public List<User> getFriends(int userId) {
-        User user = userStorage.getUserId(userId);
-
-        List<Integer> listId = new ArrayList<>(user.getFriends());
-        List<User> listFriends = new ArrayList<>();
-
-        for (Integer id : listId) {
-            listFriends.add(userStorage.getUserId(id));
-        }
-        return listFriends;
+        userStorage.getUserId(userId);
+        return userStorage.getFreinds(userId);
     }
 
 
     public List<User> getCommonFriends(int userId, int otherId) {
-        User user = userStorage.getUserId(userId);
-        User userOther = userStorage.getUserId(otherId);
-
-        List<Integer> listUserId = new ArrayList<>(user.getFriends());
-        List<Integer> listOtherId = new ArrayList<>(userOther.getFriends());
-        List<Integer> listCommonId = new ArrayList<>();
-
-        for (Integer id1 : listUserId) {
-            for (Integer id2 : listOtherId) {
-                if (id1.equals(id2)) {
-                    listCommonId.add(id1);
-                }
-            }
-        }
-        List<User> listCommonFriends = new ArrayList<>();
-
-        for (Integer id : listCommonId) {
-            listCommonFriends.add(userStorage.getUserId(id));
-        }
-        return listCommonFriends;
+        userStorage.getUserId(userId);
+        userStorage.getUserId(otherId);
+        return userStorage.getCommonFriends(userId, otherId);
     }
 
 
@@ -127,6 +92,5 @@ public class UserService {
     private void logValidationUser() {
         log.warn("Валидация ползователя не пройдена");
     }
-
 
 }
