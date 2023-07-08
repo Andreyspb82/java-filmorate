@@ -2,6 +2,8 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -12,8 +14,8 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.List;
 import java.util.Map;
 
-@Component("userDbStorage")
-//@Qualifier("userDbStorage")
+@Component
+@Primary
 @Slf4j
 @AllArgsConstructor
 public class UserDbStorage implements UserStorage {

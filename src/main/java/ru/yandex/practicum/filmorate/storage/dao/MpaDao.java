@@ -23,8 +23,8 @@ public class MpaDao {
 
         List<Mpa> mpas = jdbcTemplate.query(sql, mpaRowMapper(), id);
         if (mpas.size() != 1) {
-            log.warn("mpa с таким Id нет");
-            throw new NotFoundException("mpa с таким Id нет");
+            log.warn("MPA с Id = " + id + " нет");
+            throw new NotFoundException("MPA с Id = " + id + " нет");
         }
         return mpas.get(0);
     }

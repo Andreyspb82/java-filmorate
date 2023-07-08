@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -14,7 +15,8 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import java.util.*;
 
 
-@Component("filmDbStorage")
+@Component
+@Primary
 @Slf4j
 @AllArgsConstructor
 public class FilmDbStorage implements FilmStorage {
@@ -62,14 +64,14 @@ public class FilmDbStorage implements FilmStorage {
 
         List<Film> films = jdbcTemplate.query(sql, filmRowMapper(), film.getId());
         if (films.size() != 1) {
-            log.warn("Фильма с таким Id нет");
-            throw new NotFoundException("Фильма с таким Id нет");
+            log.warn("Фильма с Id = " + film.getId() + " нет");
+            throw new NotFoundException("Фильма с Id = " + film.getId() + " нет");
         }
 
-        int rateFilm = jdbcTemplate.queryForObject("select count(film_id) as rate from film_likes fl  " +
-                "where fl.film_id = ?;",
-                (rs, rowNum) -> rs.getInt("rate"), film.getId());
 
+        int rateFilm = jdbcTemplate.queryForObject("select count(film_id) as rate from film_likes fl  " +
+                        "where fl.film_id = ?;",
+                (rs, rowNum) -> rs.getInt("rate"), film.getId());
 
         jdbcTemplate.update("delete from films_genres where film_id=?", film.getId());
 
@@ -82,7 +84,7 @@ public class FilmDbStorage implements FilmStorage {
                 film.getReleaseDate(),
                 film.getDescription(),
                 film.getDuration(),
-                rateFilm, //film.getRate(),
+                rateFilm,
                 film.getMpa().getId(),
                 film.getId()
         );
@@ -125,8 +127,8 @@ public class FilmDbStorage implements FilmStorage {
                 "where f.id = ?;";
         List<Film> films = jdbcTemplate.query(sql, filmRowMapper(), id);
         if (films.size() != 1) {
-            log.warn("Фильма с таким Id нет");
-            throw new NotFoundException("Фильма с таким Id нет");
+            log.warn("Фильма с Id = " + id + " нет");
+            throw new NotFoundException("Фильма с Id = " + id + " нет");
         }
         return films.get(0);
     }

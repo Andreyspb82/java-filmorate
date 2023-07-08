@@ -23,8 +23,8 @@ public class GenreDao {
 
         List<Genre> genres = jdbcTemplate.query(sql, mpaRowMapper(), id);
         if (genres.size() != 1) {
-            log.warn("Жанра с таким Id нет");
-            throw new NotFoundException("Жанра с таким Id нет");
+            log.warn("Жанра с Id = " + id + " нет");
+            throw new NotFoundException("Жанра с Id = " + id + " нет");
         }
         return genres.get(0);
     }

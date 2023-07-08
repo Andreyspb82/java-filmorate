@@ -28,7 +28,6 @@ public class FilmService {
 
     public Film createFilm(Film film) {
         validationFilm(film);
-        //  film.setId(getNextId());
         return filmStorage.putFilm(film);
     }
 
