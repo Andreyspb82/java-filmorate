@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.dao.GenreDao;
 
 import java.util.List;
@@ -19,7 +18,7 @@ public class GenreService {
         return genreDao.getGenreId(id);
     }
 
-    public List<Genre> getGenres () {
+    public List<Genre> getGenres() {
         return genreDao.getGenres();
     }
 

@@ -77,7 +77,8 @@ public class FilmDbStorage implements FilmStorage {
 
         Set<Genre> genres = new HashSet<>(film.getGenres());
 
-        String sqlFilm = "update films set name = ?, release_date = ?, description = ?,  duration = ?, rate = ? , mpa_id = ? where id = ?";
+        String sqlFilm = "update films set name = ?, release_date = ?, description = ?,  duration = ?, rate = ?, " +
+                "mpa_id = ? where id = ?";
         jdbcTemplate.update(
                 sqlFilm,
                 film.getName(),

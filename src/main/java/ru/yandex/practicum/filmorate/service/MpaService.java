@@ -19,8 +19,8 @@ public class MpaService {
         return mpaDao.getMpaId(id);
     }
 
-    public List<Mpa> getMpas () {
-        return mpaDao.getMpas ();
+    public List<Mpa> getMpas() {
+        return mpaDao.getMpas();
     }
 
 }

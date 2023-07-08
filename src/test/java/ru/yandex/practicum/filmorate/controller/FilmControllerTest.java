@@ -8,8 +8,8 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -77,7 +77,7 @@ class FilmControllerTest {
     @Test
     void shouldReturnErrorEmptyName() {
         filmTest.setName(null);
-        ValidationException ex = assertThrows(ValidationException.class, new Executable()  {
+        ValidationException ex = assertThrows(ValidationException.class, new Executable() {
             @Override
             public void execute() throws Throwable {
                 filmController.createFilm(filmTest);
