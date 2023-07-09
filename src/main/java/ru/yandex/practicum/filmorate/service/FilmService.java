@@ -62,6 +62,7 @@ public class FilmService {
     public List<Film> ratingFilms(int count) {
         List<Film> ratingFilms = new ArrayList<>(filmStorage.getFilms());
 
+
         if (ratingFilms.isEmpty()) {
             log.warn("Список пустой");
             throw new NotFoundException("Список пустой");

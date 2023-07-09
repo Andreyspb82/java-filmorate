@@ -12,7 +12,10 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 
 @Component
@@ -26,8 +29,6 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film putFilm(Film film) {
-        Set<Genre> genres = new HashSet<>(film.getGenres());
-
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate.getDataSource())
                 .withTableName("films")
                 .usingGeneratedKeyColumns("id");
@@ -42,13 +43,18 @@ public class FilmDbStorage implements FilmStorage {
         Number id = simpleJdbcInsert.executeAndReturnKey(params);
         film.setId(id.intValue());
 
-        String sqlGenres = "insert into films_genres (film_id, genre_id) values (?, ?)";
-        for (Genre genre : genres) {
-            jdbcTemplate.update(
-                    sqlGenres,
-                    film.getId(),
-                    genre.getId()
-            );
+        List<Genre> genres = new ArrayList<>(new HashSet<>(film.getGenres()));
+
+        if (!genres.isEmpty()) {
+            StringBuilder sqlBuilder = new StringBuilder("insert into films_genres (film_id, genre_id) values ");
+            for (int i = 0; i < genres.size(); i++) {
+                sqlBuilder.append("(" + film.getId() + ", " + genres.get(i).getId() + ")");
+                if ((i < (genres.size() - 1))) {
+                    sqlBuilder.append(",");
+                }
+            }
+            String sqlGenres = sqlBuilder.toString();
+            jdbcTemplate.update(sqlGenres);
         }
         return film;
     }
@@ -75,8 +81,6 @@ public class FilmDbStorage implements FilmStorage {
 
         jdbcTemplate.update("delete from films_genres where film_id=?", film.getId());
 
-        Set<Genre> genres = new HashSet<>(film.getGenres());
-
         String sqlFilm = "update films set name = ?, release_date = ?, description = ?,  duration = ?, rate = ?, " +
                 "mpa_id = ? where id = ?";
         jdbcTemplate.update(
@@ -90,30 +94,34 @@ public class FilmDbStorage implements FilmStorage {
                 film.getId()
         );
 
-        String sqlGenres = "insert into films_genres (film_id, genre_id) values (?, ?)";
+        List<Genre> genres = new ArrayList<>(new HashSet<>(film.getGenres()));
+
         if (!genres.isEmpty()) {
-            for (Genre genre : genres) {
-                jdbcTemplate.update(
-                        sqlGenres,
-                        film.getId(),
-                        genre.getId()
-                );
+            StringBuilder sqlBuilder = new StringBuilder("insert into films_genres (film_id, genre_id) values ");
+            for (int i = 0; i < genres.size(); i++) {
+                sqlBuilder.append("(" + film.getId() + ", " + genres.get(i).getId() + ")");
+                if ((i < (genres.size() - 1))) {
+                    sqlBuilder.append(",");
+                }
             }
+            String sqlGenres = sqlBuilder.toString();
+            jdbcTemplate.update(sqlGenres);
         }
         return getFilmId(film.getId());
-
     }
 
     @Override
     public List<Film> getFilms() {
-        try {
-            String sql = "select  f.id, f.name,  f.release_date, f.description, f.duration, f.rate, f.mpa_id,  " +
-                    "m.name as name_mpa, fg.genre_id,  g.name as name_genre from films f join mpa m on f.mpa_id = m.id  " +
-                    "LEFT OUTER join films_genres fg on f.id = fg.film_id  " +
-                    "LEFT OUTER join  genres g on   fg.genre_id = g.id order by f.id ;";
+        String sql = "select  f.id, f.name,  f.release_date, f.description, f.duration, f.rate, f.mpa_id,  " +
+                "m.name as name_mpa, fg.genre_id,  g.name as name_genre from films f join mpa m on f.mpa_id = m.id  " +
+                "LEFT OUTER join films_genres fg on f.id = fg.film_id  " +
+                "LEFT OUTER join  genres g on   fg.genre_id = g.id order by f.id ;";
 
-            return jdbcTemplate.queryForObject(sql, filmsRowMapper());
-        } catch (RuntimeException re) {
+        List<List<Film>> films = jdbcTemplate.query(sql, filmsRowMapper());
+        if (films.size() == 1) {
+            return films.get(0);
+        } else {
+            log.warn("Список фильмов пустой");
             return new ArrayList<>();
         }
     }
@@ -216,6 +224,7 @@ public class FilmDbStorage implements FilmStorage {
                 film = new Film();
             } while (rs.next());
             return films;
+
         };
     }
 
