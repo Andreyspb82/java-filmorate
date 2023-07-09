@@ -3,26 +3,44 @@ package ru.yandex.practicum.filmorate.controller;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
+@AutoConfigureTestDatabase
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class UserControllerTest {
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
     private UserController userController;
+
+    public UserControllerTest(@Autowired JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
     private User userTest;
 
     @BeforeEach
     void setUp() {
-        InMemoryUserStorage userStorage = new InMemoryUserStorage();
+        UserDbStorage userStorage = new UserDbStorage(jdbcTemplate);
         UserService userService = new UserService(userStorage);
         userController = new UserController(userService);
+
         userTest = new User(null, "mail@mail.com",
                 "login", "name", LocalDate.of(2000, 1, 1));
     }
@@ -125,7 +143,7 @@ class UserControllerTest {
                 User user = userController.getUserId(2);
             }
         });
-        assertEquals("Пользователя с таким Id нет",
+        assertEquals("Пользователя с Id = " + 2 + " нет",
                 ex.getMessage(), "Проверка получения пользователя по несуществующему Id");
     }
 

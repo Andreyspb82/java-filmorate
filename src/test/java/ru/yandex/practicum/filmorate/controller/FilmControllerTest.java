@@ -3,42 +3,75 @@ package ru.yandex.practicum.filmorate.controller;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
+@AutoConfigureTestDatabase
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class FilmControllerTest {
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
     private FilmController filmController;
+
+    public FilmControllerTest(@Autowired JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
     private Film filmTest;
+    private Mpa mpaTest;
+    private Genre genreTest;
 
     @BeforeEach
     void setUp() {
-        InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
-        InMemoryUserStorage userStorage = new InMemoryUserStorage();
+        FilmDbStorage filmStorage = new FilmDbStorage(jdbcTemplate);
+        UserDbStorage userStorage = new UserDbStorage(jdbcTemplate);
         UserService userService = new UserService(userStorage);
         FilmService filmService = new FilmService(filmStorage, userService);
-
         filmController = new FilmController(filmService);
-        filmTest = new Film(null, "name", "description",
-                LocalDate.of(2000, 1, 1), 60);
+
+        mpaTest = new Mpa(1, "G");
+        genreTest = new Genre(1, "Комедия");
+        List<Genre> genres = new ArrayList<>();
+        genres.add(genreTest);
+        filmTest = new Film(null, "name", LocalDate.of(2000, 1, 1),
+                "description", 60, 2, mpaTest, genres);
     }
 
     @Test
     void createFilm() {
         Film createFilm = filmController.createFilm(filmTest);
-        assertEquals(1, filmTest.getId(), "Неверный Id фильма");
-        assertEquals("name", filmTest.getName(), "Неверное название фильма");
-        assertEquals("description", filmTest.getDescription(), "Неверное описание фильма");
-        assertEquals(LocalDate.of(2000, 1, 1), filmTest.getReleaseDate(), "Неверная дата релиза");
-        assertEquals(60, filmTest.getDuration(), "Неверная продолжительность фильма");
+        assertEquals(1, createFilm.getId(), "Неверный Id фильма");
+        assertEquals("name", createFilm.getName(), "Неверное название фильма");
+        assertEquals(LocalDate.of(2000, 1, 1), createFilm.getReleaseDate(), "Неверная дата релиза");
+        assertEquals("description", createFilm.getDescription(), "Неверное описание фильма");
+        assertEquals(60, createFilm.getDuration(), "Неверная продолжительность фильма");
+        assertEquals(2, createFilm.getRate(), "Неверное количество лайков у фильма");
+        assertEquals(1, createFilm.getMpa().getId(), "Неверный Id MPA фильма");
+        assertEquals("G", createFilm.getMpa().getName(), "Неверное название MPA фильма");
+        assertEquals(1, createFilm.getGenres().get(0).getId(), "Неверное Id жанра фильма");
+        assertEquals("Комедия", createFilm.getGenres().get(0).getName(), "Неверное название жанра фильма");
     }
 
     @Test
@@ -109,7 +142,7 @@ class FilmControllerTest {
                 filmController.getFilmId(2);
             }
         });
-        assertEquals("Фильма с таким Id нет",
+        assertEquals("Фильма с Id = " + 2 + " нет",
                 ex.getMessage(), "Проверка получения фильма по несуществующему Id");
     }
 
