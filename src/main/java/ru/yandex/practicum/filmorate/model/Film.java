@@ -4,26 +4,21 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 public class Film {
     private Integer id;
     private String name;
-    private String description;
     private LocalDate releaseDate;
+    private String description;
     private int duration;
-    private final Set<Integer> like = new TreeSet<>();
+    private int rate;
+    private Mpa mpa = new Mpa();
+    private List<Genre> genres = new ArrayList<>();
 
-
-    public void addLike(int idUser) {
-        like.add(idUser);
+    public Film() {
     }
-
-    public void removeLike(int idUser) {
-        like.remove(idUser);
-    }
-
 }
