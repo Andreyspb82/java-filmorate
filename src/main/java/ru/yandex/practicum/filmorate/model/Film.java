@@ -18,6 +18,7 @@ public class Film {
     private int rate;
     private Mpa mpa = new Mpa();
     private List<Genre> genres = new ArrayList<>();
+    private List<Director> directors = new ArrayList<>();
 
     public Film() {
     }
