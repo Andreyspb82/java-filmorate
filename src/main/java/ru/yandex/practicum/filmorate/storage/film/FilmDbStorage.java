@@ -3,19 +3,25 @@ package ru.yandex.practicum.filmorate.storage.film;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 
 @Component
@@ -56,16 +62,29 @@ public class FilmDbStorage implements FilmStorage {
             String sqlGenres = sqlBuilder.toString();
             jdbcTemplate.update(sqlGenres);
         }
+        addDirectors(film);
         return film;
+    }
+
+    private void addDirectors(Film film) { // Добавляет режиссеров из фильма в таблицу films_directors
+        List<Director> directors = film.getDirectors().stream().distinct().collect(Collectors.toList());
+        String sqlInsert = "insert into films_directors (film_id, director_id) values(?, ?);";
+        if (directors.size() > 0) {
+            for (int i = 0; i < directors.size(); i++) {
+                jdbcTemplate.update(sqlInsert, film.getId(), directors.get(i).getId());
+            }
+        }
     }
 
     @Override
     public Film updateFilm(Film film) {
 
         String sql = "select distinct  fg.genre_id, f.id, f.name,  f.release_date, f.description, f.duration, f.rate, f.mpa_id,  " +
-                "m.name as name_mpa,  g.name as name_genre from films f join mpa m on f.mpa_id = m.id  " +
+                "m.name as name_mpa,  g.name as name_genre, d.name as director_name, fd.DIRECTOR_ID as director_id  from films f join mpa m on f.mpa_id = m.id  " +
                 "LEFT OUTER join films_genres fg on f.id = fg.film_id  " +
                 "LEFT OUTER join  genres g on   fg.genre_id = g.id  " +
+                "LEFT OUTER join films_directors fd on f.id = fd.film_id  " +
+                "LEFT OUTER join directors d on fd.director_id = d.id  " +
                 "where f.id = ?;";
 
         List<Film> films = jdbcTemplate.query(sql, filmRowMapper(), film.getId());
@@ -73,7 +92,6 @@ public class FilmDbStorage implements FilmStorage {
             log.warn("Фильма с Id = " + film.getId() + " нет");
             throw new NotFoundException("Фильма с Id = " + film.getId() + " нет");
         }
-
 
         int rateFilm = jdbcTemplate.queryForObject("select count(film_id) as rate from film_likes fl  " +
                         "where fl.film_id = ?;",
@@ -107,15 +125,18 @@ public class FilmDbStorage implements FilmStorage {
             String sqlGenres = sqlBuilder.toString();
             jdbcTemplate.update(sqlGenres);
         }
+        addDirectors(film);
         return getFilmId(film.getId());
     }
 
     @Override
     public List<Film> getFilms() {
         String sql = "select  f.id, f.name,  f.release_date, f.description, f.duration, f.rate, f.mpa_id,  " +
-                "m.name as name_mpa, fg.genre_id,  g.name as name_genre from films f join mpa m on f.mpa_id = m.id  " +
+                "m.name as name_mpa, fg.genre_id,  g.name as name_genre, d.name as director_name, fd.DIRECTOR_ID as director_id from films f join mpa m on f.mpa_id = m.id  " +
                 "LEFT OUTER join films_genres fg on f.id = fg.film_id  " +
-                "LEFT OUTER join  genres g on   fg.genre_id = g.id order by f.id ;";
+                "LEFT OUTER join films_directors fd on f.id = fd.film_id " +
+                "LEFT OUTER join directors d on fd.DIRECTOR_ID = d.id " +
+                "LEFT OUTER join  genres g on   fg.genre_id = g.id order by f.id";
 
         List<List<Film>> films = jdbcTemplate.query(sql, filmsRowMapper());
         if (films.size() == 1) {
@@ -130,9 +151,11 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film getFilmId(int id) {
         String sql = "select distinct  fg.genre_id, f.id, f.name,  f.release_date, f.description, f.duration, f.rate, f.mpa_id,  " +
-                "m.name as name_mpa,  g.name as name_genre from films f join mpa m on f.mpa_id = m.id  " +
+                "m.name as name_mpa,  g.name as name_genre, d.name as director_name, fd.DIRECTOR_ID as director_id from films f join mpa m on f.mpa_id = m.id  " +
                 "LEFT OUTER join films_genres fg on f.id = fg.film_id  " +
                 "LEFT OUTER join  genres g on   fg.genre_id = g.id  " +
+                "LEFT OUTER join films_directors fd on f.id = fd.film_id  " +
+                "LEFT OUTER join directors d on fd.director_id = d.id  " +
                 "where f.id = ?;";
         List<Film> films = jdbcTemplate.query(sql, filmRowMapper(), id);
         if (films.size() != 1) {
@@ -178,54 +201,77 @@ public class FilmDbStorage implements FilmStorage {
                     film.getGenres().add(genre);
                 } while (rs.next());
             }
+            film.setDirectors(getListDirectors(rs));
             return film;
         };
+    }
+
+    private List<Director> getListDirectors(ResultSet resultSet) throws SQLException { //Возвращает список режиссеров
+        List<Director> list = new ArrayList<>();
+        if (Objects.nonNull(resultSet.getString("director_name"))) {
+            do {
+                Director director = new Director(resultSet.getInt("director_id"), resultSet.getString("director_name"));
+                list.add(director);
+            } while (resultSet.next());
+        }
+        return list;
     }
 
     private RowMapper<List<Film>> filmsRowMapper() {
         return (rs, rowNum) -> {
             List<Film> films = new ArrayList<>();
-            Film film = new Film();
-            do {
-                film.setId(rs.getInt("id"));
-                film.setName(rs.getString("name"));
-                film.setReleaseDate(rs.getDate("release_date").toLocalDate());
-                film.setDescription(rs.getString("description"));
-                film.setDuration(rs.getInt("duration"));
-                film.setRate(rs.getInt("rate"));
-                film.setMpa(new Mpa(rs.getInt("mpa_id"), rs.getString("name_mpa")));
 
-                if (rs.getString("name_genre") != null) {
-                    film.getGenres().add(new Genre(rs.getInt("genre_id"), rs.getString("name_genre")));
-                }
+            do {
+                Film film = new Film();
+                setFilmProperties(rs, film);
+                fillGenres(rs, film);
+                fillDirectors(rs, film);
                 while (rs.next()) {
                     if (!film.getId().equals(rs.getInt("id"))) {
                         films.add(film);
                         film = new Film();
-                        film.setId(rs.getInt("id"));
-                        film.setName(rs.getString("name"));
-                        film.setReleaseDate(rs.getDate("release_date").toLocalDate());
-                        film.setDescription(rs.getString("description"));
-                        film.setDuration(rs.getInt("duration"));
-                        film.setRate(rs.getInt("rate"));
-                        film.setMpa(new Mpa(rs.getInt("mpa_id"), rs.getString("name_mpa")));
-                        if (rs.getString("name_genre") != null) {
-                            film.getGenres().add(new Genre(rs.getInt("genre_id"),
-                                    rs.getString("name_genre")));
-                        }
+                        setFilmProperties(rs, film);
+                        fillGenres(rs, film);
+                        fillDirectors(rs, film);
                     } else {
-                        if (rs.getString("name_genre") != null) {
-                            film.getGenres().add(new Genre(rs.getInt("genre_id"),
-                                    rs.getString("name_genre")));
-                        }
+                        fillGenres(rs, film);
+                        fillDirectors(rs, film);
                     }
                 }
                 films.add(film);
-                film = new Film();
             } while (rs.next());
             return films;
-
         };
     }
+
+    private void fillGenres(ResultSet rs, Film film) throws SQLException {
+        if (rs.getString("name_genre") != null) {
+            Genre genre = new Genre(rs.getInt("genre_id"), rs.getString("name_genre"));
+            if (!film.getGenres().contains(genre)) {
+                film.getGenres().add(genre);
+            }
+        }
+    }
+
+    private void fillDirectors(ResultSet rs, Film film) throws SQLException {
+        if (rs.getString("director_name") != null) {
+            Director director = new Director(rs.getInt("director_id"), rs.getString("director_name"));
+            if (!film.getDirectors().contains(director)) {
+                film.getDirectors().add(director);
+            }
+        }
+
+    }
+
+    private void setFilmProperties(ResultSet rs, Film film) throws SQLException {
+        film.setId(rs.getInt("id"));
+        film.setName(rs.getString("name"));
+        film.setReleaseDate(rs.getDate("release_date").toLocalDate());
+        film.setDescription(rs.getString("description"));
+        film.setDuration(rs.getInt("duration"));
+        film.setRate(rs.getInt("rate"));
+        film.setMpa(new Mpa(rs.getInt("mpa_id"), rs.getString("name_mpa")));
+    }
+
 
 }
