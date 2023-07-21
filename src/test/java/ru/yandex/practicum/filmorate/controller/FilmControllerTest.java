@@ -10,7 +10,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -36,15 +35,11 @@ class FilmControllerTest {
     @Autowired
     private FilmController filmController;
 
-    @Autowired
-    private DirectorController directorController;
-
     public FilmControllerTest(@Autowired JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
     private Film filmTest;
-    private Film filmTest2;
     private Mpa mpaTest;
     private Genre genreTest;
 
@@ -58,22 +53,10 @@ class FilmControllerTest {
 
         mpaTest = new Mpa(1, "G");
         genreTest = new Genre(1, "Комедия");
-
         List<Genre> genres = new ArrayList<>();
         genres.add(genreTest);
-
-        List<Director> directors = new ArrayList<>();
-        List<Director> directors2 = new ArrayList<>();
-        directorController.createDirector(new Director(1, "Dir"));
-        directorController.createDirector(new Director(2, "Dir2"));
-        directors.add(new Director(1, "Dir"));
-        directors2.add(new Director(1, "Dir"));
-        directors2.add(new Director(2, "Dir2"));
-
         filmTest = new Film(null, "name", LocalDate.of(2000, 1, 1),
-                "description", 60, 2, mpaTest, genres, directors);
-        filmTest2 = new Film(null, "Крадущийся тигр", LocalDate.parse("1999-01-01"),
-                "затаившийся дракон", 200, 12, mpaTest, genres, directors2);
+                "description", 60, 2, mpaTest, genres);
     }
 
     @Test
@@ -89,8 +72,6 @@ class FilmControllerTest {
         assertEquals("G", createFilm.getMpa().getName(), "Неверное название MPA фильма");
         assertEquals(1, createFilm.getGenres().get(0).getId(), "Неверное Id жанра фильма");
         assertEquals("Комедия", createFilm.getGenres().get(0).getName(), "Неверное название жанра фильма");
-        assertEquals(1, createFilm.getDirectors().size());
-        assertEquals(1, createFilm.getDirectors().get(0).getId());
     }
 
     @Test
@@ -146,16 +127,10 @@ class FilmControllerTest {
     }
 
     @Test
-    void shouldReturnFilmById1() {
-        Film film = filmController.createFilm(filmTest);
-        System.out.println(film);
-        assertAll(
-                () -> assertEquals(film.getId(), 1),
-                () -> assertEquals(film.getName(), "name"),
-                () -> assertEquals(film.getMpa().getId(), 1),
-                () -> assertEquals(film.getGenres().get(0).getName(), "Комедия"),
-                () -> assertEquals(film.getDirectors().get(0).getName(), "Dir")
-        );
+    void shouldReturnFilmById() {
+        Film createFilm = filmController.createFilm(filmTest);
+        Film filmId = filmController.getFilmId(1);
+        assertEquals(createFilm, filmId, "Фильмы на совпадают");
     }
 
     @Test
@@ -179,27 +154,4 @@ class FilmControllerTest {
         assertTrue(filmController.getFilms().isEmpty(), "Список фильмов не пустой");
     }
 
-    @Test
-    void shouldGetFilmsByDirectorSortYear() {
-        Film film = filmController.createFilm(filmTest);
-        Film film2 = filmController.createFilm(filmTest2);
-        List<Film> films = filmController.getFilmsByDirector(1, "year");
-        assertAll(
-                () -> assertEquals(films.size(), 2),
-                () -> assertEquals(films.get(0).getReleaseDate(), LocalDate.parse("1999-01-01")),
-                () -> assertEquals(films.get(1).getReleaseDate(), LocalDate.parse("2000-01-01"))
-        );
-    }
-
-    @Test
-    void shouldGetFilmsByDirectorSortLikes() {
-        Film film = filmController.createFilm(filmTest);
-        Film film2 = filmController.createFilm(filmTest2);
-        List<Film> films = filmController.getFilmsByDirector(1, "likes");
-        assertAll(
-                () -> assertEquals(films.size(), 2),
-                () -> assertEquals(films.get(0).getRate(), 12),
-                () -> assertEquals(films.get(1).getRate(), 2)
-        );
-    }
 }

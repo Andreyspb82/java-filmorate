@@ -89,7 +89,6 @@ public class FilmService {
         return new ArrayList<>(userFilms);
     }
 
-
     private void validationFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             logValidationFilm();

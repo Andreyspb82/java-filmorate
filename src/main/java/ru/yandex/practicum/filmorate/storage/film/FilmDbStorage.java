@@ -194,6 +194,31 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sgl, filmId, userId);
     }
 
+    @Override
+    public List<Film> getFilmsRecommendations(int userId) {
+
+        String sql = "select t3.id , t3.name, t3.release_date, t3.description, t3.duration, t3.rate, t3.mpa_id, " +
+                "m.name as name_mpa, fg.genre_id, g.name as name_genre from (select * from (select f.id, f.name, " +
+                "f.release_date, f.description, f.duration, f.rate, f.mpa_id from films f join film_likes fl on " +
+                "f.id = fl.film_id where fl.user_id in (select t4.user_id from (select (count( f.id)) as count_film, " +
+                "fl.user_id from films f join film_likes fl on f.id = fl.film_id  " +
+                "where f.id in (select f.id from films f join film_likes fl on f.id = fl.film_id where fl.user_id = ?) " +
+                "and not fl.user_id = ? GROUP by fl.user_id order by count_film desc limit 1) as t4)) as t2 " +
+                "except " +
+                "select * from (select f.id, f.name, f.release_date, f.description, f.duration, f.rate, f.mpa_id  " +
+                "from films f join film_likes fl on f.id = fl.film_id  where fl.user_id = ?) as t1 ) as t3 " +
+                "join mpa m on t3.mpa_id = m.id   LEFT OUTER join films_genres fg on t3.id = fg.film_id " +
+                "LEFT OUTER join  genres g on   fg.genre_id = g.id order by  fg.genre_id;";
+
+        List<List<Film>> films = jdbcTemplate.query(sql, filmsRowMapper(), userId, userId, userId);
+        if (films.size() == 1) {
+            return films.get(0);
+        } else {
+            log.warn("Список фильмов пустой");
+            return new ArrayList<>();
+        }
+    }
+
 
     private RowMapper<Film> filmRowMapper() {
         return (rs, rowNum) -> {
