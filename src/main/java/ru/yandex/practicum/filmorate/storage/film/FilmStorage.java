@@ -20,7 +20,5 @@ public interface FilmStorage {
 
     void removeLikeFilm(int filmId, int userId);
 
-    List <Film> getFilmsRecommendations (int userId);
-
-
+    List<Film> getFilmsRecommendations(int userId);
 }
