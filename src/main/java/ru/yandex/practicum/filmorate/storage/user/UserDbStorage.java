@@ -8,7 +8,9 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,7 @@ import java.util.Map;
 @Slf4j
 @AllArgsConstructor
 public class UserDbStorage implements UserStorage {
+    private final FilmStorage filmStorage;
     private JdbcTemplate jdbcTemplate;
 
 
@@ -111,6 +114,11 @@ public class UserDbStorage implements UserStorage {
                 userRowMapper(),
                 userId,
                 otherId);
+    }
+
+    @Override
+    public List<Film> getFilmsRecommendations(int userId) {
+        return filmStorage.getFilmsRecommendations(userId);
     }
 
 

@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -16,6 +17,7 @@ import java.util.List;
 public class UserService {
 
     private final UserStorage userStorage;
+
 
     public User createUser(User user) {
         validationUser(user);
@@ -70,6 +72,11 @@ public class UserService {
         userStorage.getUserId(userId);
         userStorage.getUserId(otherId);
         return userStorage.getCommonFriends(userId, otherId);
+    }
+
+    public List<Film> getFilmsRecommendations(int userId) {
+        userStorage.getUserId(userId);
+        return userStorage.getFilmsRecommendations(userId);
     }
 
 

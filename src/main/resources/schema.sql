@@ -87,4 +87,3 @@ create table if not exists feed (
     operation varchar (255), -- пока так, надо еще подумать
     entity_id integer -- с этим недо будет разобраться
 );
-

@@ -9,12 +9,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -89,7 +84,6 @@ public class FilmService {
         userFilms.retainAll(friendFilms);
         return new ArrayList<>(userFilms);
     }
-
 
     private void validationFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
