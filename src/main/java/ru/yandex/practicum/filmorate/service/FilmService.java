@@ -80,7 +80,9 @@ public class FilmService {
                 .collect(Collectors.toList());
 
     }
-
+    public List<Film> getFilmsByDirector(int id, String sort){
+        return filmStorage.getFilmsByDirector(id, sort);
+    }
 
     private void validationFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {

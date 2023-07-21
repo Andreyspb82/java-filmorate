@@ -57,4 +57,9 @@ public class FilmController {
         return filmService.ratingFilms(count);
     }
 
+    @GetMapping("/director/{directorId}")
+    public List<Film> getFilmsByDirector(@PathVariable("directorId") int directorId, @RequestParam(defaultValue ="ASC") String sortBy) {
+       return filmService.getFilmsByDirector(directorId, sortBy);
+    }
+
 }
