@@ -126,6 +126,21 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
+    @Override
+    public List<Film> getFilmsByUserId(int userId) {
+        String sqlQuery = "SELECT f.id, f.name, f.release_date, f.description, f.duration, f.rate, f.mpa_id, " +
+                "m.name AS name_mpa, fg.genre_id, g.name AS name_genre, " +
+                "COUNT(fl.user_id) AS num_likes " +
+                "FROM films f " +
+                "JOIN mpa m ON f.mpa_id = m.id " +
+                "LEFT JOIN films_genres fg ON f.id = fg.film_id " +
+                "LEFT JOIN genres g ON fg.genre_id = g.id " +
+                "LEFT JOIN film_likes fl ON f.id = fl.film_id " +
+                "WHERE fl.user_id = ? " +
+                "GROUP BY f.id, f.name, f.release_date, f.description, f.duration, f.rate, f.mpa_id, m.name, fg.genre_id, g.name " +
+                "ORDER BY num_likes DESC";
+        return jdbcTemplate.query(sqlQuery, filmRowMapper(), userId);
+    }
 
     @Override
     public Film getFilmId(int id) {
