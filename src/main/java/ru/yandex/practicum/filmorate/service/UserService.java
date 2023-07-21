@@ -94,7 +94,7 @@ public class UserService {
     }
 
     private void logValidationUser() {
-        log.warn("Валидация ползователя не пройдена");
+        log.warn("Валидация пользователя не пройдена");
     }
 
 }

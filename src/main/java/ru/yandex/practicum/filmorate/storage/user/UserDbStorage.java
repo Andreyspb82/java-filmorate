@@ -23,7 +23,6 @@ public class UserDbStorage implements UserStorage {
     private final FilmStorage filmStorage;
     private JdbcTemplate jdbcTemplate;
 
-
     @Override
     public User putUser(User user) {
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate.getDataSource())

@@ -78,6 +78,10 @@ public class FilmService {
 
     }
 
+    public List<Film> getFilmsByDirector(int id, String sort) {
+        return filmStorage.getFilmsByDirector(id, sort);
+    }
+
     public List<Film> commonFilms(int userId, int friendId) {
         Set<Film> userFilms = new HashSet<>(filmStorage.getFilmsByUserId(userId));
         Set<Film> friendFilms = new HashSet<>(filmStorage.getFilmsByUserId(friendId));
