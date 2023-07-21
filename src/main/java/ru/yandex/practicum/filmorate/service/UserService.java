@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
@@ -18,7 +17,7 @@ import java.util.List;
 public class UserService {
 
     private final UserStorage userStorage;
-    private final FilmStorage filmStorage;
+
 
     public User createUser(User user) {
         validationUser(user);
@@ -77,9 +76,7 @@ public class UserService {
 
     public List<Film> getFilmsRecommendations(int userId) {
         userStorage.getUserId(userId);
-        return filmStorage.getFilmsRecommendations(userId);
-
-        //  return null;
+        return userStorage.getFilmsRecommendations(userId);
     }
 
 
