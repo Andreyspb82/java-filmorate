@@ -13,4 +13,8 @@ public class Director {
     //Проверяем что имя заполнено
     @NotBlank(message = "Имя не может быть пустым")
     private String name;
+
+    public Director(int id) {
+        this.id = id;
+    }
 }

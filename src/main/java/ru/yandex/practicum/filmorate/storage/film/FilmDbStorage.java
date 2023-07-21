@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage.film;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -16,11 +15,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -235,7 +230,6 @@ public class FilmDbStorage implements FilmStorage {
     private RowMapper<List<Film>> filmsRowMapper() {
         return (rs, rowNum) -> {
             List<Film> films = new ArrayList<>();
-
             do {
                 Film film = new Film();
                 setFilmProperties(rs, film);
@@ -288,5 +282,32 @@ public class FilmDbStorage implements FilmStorage {
         film.setMpa(new Mpa(rs.getInt("mpa_id"), rs.getString("name_mpa")));
     }
 
+    @Override
+    public List<Film> getFilmsByDirector(int id, String sort) {
+        if (sort.equals("year")){
+           return getSortedFilms(id, "release_date");
+        }else if (sort.equals("likes")){
+            return getSortedFilms(id, "rate DESC");
+        } else {
+            return getSortedFilms(id, "f.id");
+        }
+    }
 
+    private  List<Film> getSortedFilms(int id, String sort) {
+        List<Film> films = new ArrayList<>();
+        String sqlSelect = "select f.id, f.name,  f.release_date, f.description, f.duration, f.rate, f.mpa_id, m.name as name_mpa, fg.genre_id,\n" +
+                "       g.name as name_genre, d.name as director_name, fd.DIRECTOR_ID as director_id from films f join mpa m on f.mpa_id = m.id\n" +
+                "       LEFT OUTER join films_genres fg on f.id = fg.film_id\n" +
+                "       LEFT OUTER join films_directors fd on f.id = fd.film_id\n" +
+                "       LEFT OUTER join directors d on fd.DIRECTOR_ID = d.id\n" +
+                "       LEFT OUTER join  genres g on   fg.genre_id = g.id\n" +
+                "where DIRECTOR_ID =?\n" +
+                "ORDER BY "+ sort;
+
+        List<List<Film>> listsFilms = jdbcTemplate.query(sqlSelect, filmsRowMapper(), id);
+        if (Objects.nonNull(listsFilms.get(0))) {
+            films = listsFilms.get(0);
+        }
+        return films;
+    }
 }
