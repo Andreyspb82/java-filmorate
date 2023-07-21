@@ -15,7 +15,11 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 
@@ -61,10 +65,11 @@ public class FilmDbStorage implements FilmStorage {
         return film;
     }
 
-    private void addDirectors(Film film) { // Добавляет режиссеров из фильма в таблицу films_directors
+    // Добавляет режиссеров из фильма в таблицу films_directors
+    private void addDirectors(Film film) {
         List<Director> directors = film.getDirectors().stream().distinct().collect(Collectors.toList());
         String sqlInsert = "insert into films_directors (film_id, director_id) values(?, ?);";
-        if (directors.size() > 0) {
+        if (!directors.isEmpty()) {
             for (int i = 0; i < directors.size(); i++) {
                 jdbcTemplate.update(sqlInsert, film.getId(), directors.get(i).getId());
             }
@@ -284,16 +289,16 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getFilmsByDirector(int id, String sort) {
-        if (sort.equals("year")){
-           return getSortedFilms(id, "release_date");
-        }else if (sort.equals("likes")){
+        if (sort.equals("year")) {
+            return getSortedFilms(id, "release_date");
+        } else if (sort.equals("likes")) {
             return getSortedFilms(id, "rate DESC");
         } else {
             return getSortedFilms(id, "f.id");
         }
     }
 
-    private  List<Film> getSortedFilms(int id, String sort) {
+    private List<Film> getSortedFilms(int id, String sort) {
         List<Film> films = new ArrayList<>();
         String sqlSelect = "select f.id, f.name,  f.release_date, f.description, f.duration, f.rate, f.mpa_id, m.name as name_mpa, fg.genre_id,\n" +
                 "       g.name as name_genre, d.name as director_name, fd.DIRECTOR_ID as director_id from films f join mpa m on f.mpa_id = m.id\n" +
@@ -302,7 +307,7 @@ public class FilmDbStorage implements FilmStorage {
                 "       LEFT OUTER join directors d on fd.DIRECTOR_ID = d.id\n" +
                 "       LEFT OUTER join  genres g on   fg.genre_id = g.id\n" +
                 "where DIRECTOR_ID =?\n" +
-                "ORDER BY "+ sort;
+                "ORDER BY " + sort;
 
         List<List<Film>> listsFilms = jdbcTemplate.query(sqlSelect, filmsRowMapper(), id);
         if (Objects.nonNull(listsFilms.get(0))) {

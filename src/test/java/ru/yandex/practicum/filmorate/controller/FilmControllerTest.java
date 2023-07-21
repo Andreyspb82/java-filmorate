@@ -72,8 +72,8 @@ class FilmControllerTest {
 
         filmTest = new Film(null, "name", LocalDate.of(2000, 1, 1),
                 "description", 60, 2, mpaTest, genres, directors);
-        filmTest2 = new Film(null,"Крадущийся тигр", LocalDate.parse("1999-01-01"),
-                "затаившийся дракон", 200, 12,mpaTest , genres, directors2);
+        filmTest2 = new Film(null, "Крадущийся тигр", LocalDate.parse("1999-01-01"),
+                "затаившийся дракон", 200, 12, mpaTest, genres, directors2);
     }
 
     @Test
@@ -150,11 +150,11 @@ class FilmControllerTest {
         Film film = filmController.createFilm(filmTest);
         System.out.println(film);
         assertAll(
-                ()-> assertEquals(film.getId(), 1),
-                ()->assertEquals(film.getName(), "name"),
-                ()->assertEquals(film.getMpa().getId(), 1),
-                ()->assertEquals(film.getGenres().get(0).getName(), "Комедия"),
-                ()->assertEquals(film.getDirectors().get(0).getName(), "Dir")
+                () -> assertEquals(film.getId(), 1),
+                () -> assertEquals(film.getName(), "name"),
+                () -> assertEquals(film.getMpa().getId(), 1),
+                () -> assertEquals(film.getGenres().get(0).getName(), "Комедия"),
+                () -> assertEquals(film.getDirectors().get(0).getName(), "Dir")
         );
     }
 
@@ -185,9 +185,9 @@ class FilmControllerTest {
         Film film2 = filmController.createFilm(filmTest2);
         List<Film> films = filmController.getFilmsByDirector(1, "year");
         assertAll(
-                ()->assertEquals(films.size(), 2),
-                ()->assertEquals(films.get(0).getReleaseDate(), LocalDate.parse("1999-01-01")),
-                ()->assertEquals(films.get(1).getReleaseDate(), LocalDate.parse("2000-01-01"))
+                () -> assertEquals(films.size(), 2),
+                () -> assertEquals(films.get(0).getReleaseDate(), LocalDate.parse("1999-01-01")),
+                () -> assertEquals(films.get(1).getReleaseDate(), LocalDate.parse("2000-01-01"))
         );
     }
 
@@ -197,9 +197,9 @@ class FilmControllerTest {
         Film film2 = filmController.createFilm(filmTest2);
         List<Film> films = filmController.getFilmsByDirector(1, "likes");
         assertAll(
-                ()->assertEquals(films.size(), 2),
-                ()->assertEquals(films.get(0).getRate(), 12),
-                ()->assertEquals(films.get(1).getRate(), 2)
+                () -> assertEquals(films.size(), 2),
+                () -> assertEquals(films.get(0).getRate(), 12),
+                () -> assertEquals(films.get(1).getRate(), 2)
         );
     }
 }

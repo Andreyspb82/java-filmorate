@@ -14,23 +14,23 @@ import java.util.List;
 public class DirectorService {
     private final DirectorDao directorDao;
 
-    public Director addDirector(Director director){
+    public Director addDirector(Director director) {
         return directorDao.addDirector(director);
     }
 
-    public Director updateDirector(Director director){
+    public Director updateDirector(Director director) {
         return directorDao.updateDirector(director);
     }
 
-    public Director getDirectorById(int id){
+    public Director getDirectorById(int id) {
         return directorDao.getDirectorById(id);
     }
 
-    public List<Director> getAllDirectors(){
+    public List<Director> getAllDirectors() {
         return directorDao.getAllDirectors();
     }
 
-    public boolean deleteDirectorById(int id){
+    public boolean deleteDirectorById(int id) {
         return directorDao.deleteDirectorById(id);
     }
 }
