@@ -33,11 +33,12 @@ public class ErrorHandler {
                 "Произошла непредвиденная ошибка."
         );
     }
-    //Для обработки ошибок валидации через аннотации
+
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValidException(final MethodArgumentNotValidException e) {
 
         return new ErrorResponse("Ошибка валидации данных. Проверьте правильность заполнения полей ");
     }
+
 }

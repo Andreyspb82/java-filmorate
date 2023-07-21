@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -23,10 +22,8 @@ import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
@@ -193,6 +190,7 @@ class FilmControllerTest {
                 ()->assertEquals(films.get(1).getReleaseDate(), LocalDate.parse("2000-01-01"))
         );
     }
+
     @Test
     void shouldGetFilmsByDirectorSortLikes() {
         Film film = filmController.createFilm(filmTest);
