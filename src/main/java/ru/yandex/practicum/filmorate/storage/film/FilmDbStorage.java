@@ -15,7 +15,11 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 
@@ -60,7 +64,6 @@ public class FilmDbStorage implements FilmStorage {
         addDirectors(film);
         return film;
     }
-
     private void addDirectors(Film film) { // Добавляет режиссеров из фильма в таблицу films_directors
         List<Director> directors = film.getDirectors().stream().distinct().collect(Collectors.toList());
         String sqlInsert = "insert into films_directors (film_id, director_id) values(?, ?);";
@@ -284,9 +287,9 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getFilmsByDirector(int id, String sort) {
-        if (sort.equals("year")){
+        if (sort.equals("year")) {
            return getSortedFilms(id, "release_date");
-        }else if (sort.equals("likes")){
+        } else if (sort.equals("likes")) {
             return getSortedFilms(id, "rate DESC");
         } else {
             return getSortedFilms(id, "f.id");
@@ -302,7 +305,7 @@ public class FilmDbStorage implements FilmStorage {
                 "       LEFT OUTER join directors d on fd.DIRECTOR_ID = d.id\n" +
                 "       LEFT OUTER join  genres g on   fg.genre_id = g.id\n" +
                 "where DIRECTOR_ID =?\n" +
-                "ORDER BY "+ sort;
+                "ORDER BY " + sort;
 
         List<List<Film>> listsFilms = jdbcTemplate.query(sqlSelect, filmsRowMapper(), id);
         if (Objects.nonNull(listsFilms.get(0))) {
