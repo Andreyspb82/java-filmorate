@@ -15,11 +15,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -147,17 +143,19 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getFilmsByUserId(int userId) {
-        String sqlQuery = "SELECT f.id, f.name, f.release_date, f.description, f.duration, f.rate, f.mpa_id, " +
-                "m.name AS name_mpa, fg.genre_id, g.name AS name_genre, " +
-                "COUNT(fl.user_id) AS num_likes " +
-                "FROM films f " +
-                "JOIN mpa m ON f.mpa_id = m.id " +
-                "LEFT JOIN films_genres fg ON f.id = fg.film_id " +
-                "LEFT JOIN genres g ON fg.genre_id = g.id " +
-                "LEFT JOIN film_likes fl ON f.id = fl.film_id " +
-                "WHERE fl.user_id = ? " +
-                "GROUP BY f.id, f.name, f.release_date, f.description, f.duration, f.rate, f.mpa_id, m.name, fg.genre_id, g.name " +
-                "ORDER BY num_likes DESC";
+        String sqlQuery = "SELECT f.id, f.name, f.release_date, f.description, f.duration, f.rate, f.mpa_id,\n" +
+                "                m.name AS name_mpa, fg.genre_id, g.name AS name_genre, d.name as director_name, fd.DIRECTOR_ID as director_id,\n" +
+                "                COUNT(fl.user_id) AS num_likes\n" +
+                "                FROM films f\n" +
+                "                JOIN mpa m ON f.mpa_id = m.id\n" +
+                "                LEFT JOIN films_genres fg ON f.id = fg.film_id\n" +
+                "                LEFT JOIN genres g ON fg.genre_id = g.id\n" +
+                "                LEFT JOIN film_likes fl ON f.id = fl.film_id\n" +
+                "                LEFT OUTER join films_directors fd on f.id = fd.film_id\n" +
+                "                LEFT OUTER join directors d on fd.director_id = d.id\n" +
+                "                WHERE fl.user_id = ?\n" +
+                "                GROUP BY f.id, f.name, f.release_date, f.description, f.duration, f.rate, f.mpa_id, m.name, fg.genre_id, g.name\n" +
+                "                ORDER BY num_likes DESC;";
         return jdbcTemplate.query(sqlQuery, filmRowMapper(), userId);
     }
 
@@ -208,20 +206,20 @@ public class FilmDbStorage implements FilmStorage {
             film.setRate(rs.getInt("rate"));
             Mpa mpa = new Mpa(rs.getInt("mpa_id"), rs.getString("name_mpa"));
             film.setMpa(mpa);
+            film.setDirectors(getListDirectors(rs));
             if (rs.getString("name_genre") != null) {
                 do {
                     Genre genre = new Genre(rs.getInt("genre_id"), rs.getString("name_genre"));
                     film.getGenres().add(genre);
                 } while (rs.next());
             }
-            film.setDirectors(getListDirectors(rs));
             return film;
         };
     }
 
     private List<Director> getListDirectors(ResultSet resultSet) throws SQLException { //Возвращает список режиссеров
         List<Director> list = new ArrayList<>();
-        if (Objects.nonNull(resultSet.getString("director_name"))) {
+        if (resultSet.getString("director_name")!= null) {
             do {
                 Director director = new Director(resultSet.getInt("director_id"), resultSet.getString("director_name"));
                 list.add(director);
