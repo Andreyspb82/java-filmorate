@@ -15,7 +15,10 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -60,6 +63,7 @@ public class FilmDbStorage implements FilmStorage {
         addDirectors(film);
         return film;
     }
+
     private void addDirectors(Film film) { // Добавляет режиссеров из фильма в таблицу films_directors
         List<Director> directors = film.getDirectors().stream().distinct().collect(Collectors.toList());
         String sqlInsert = "insert into films_directors (film_id, director_id) values(?, ?);";
@@ -119,6 +123,7 @@ public class FilmDbStorage implements FilmStorage {
             String sqlGenres = sqlBuilder.toString();
             jdbcTemplate.update(sqlGenres);
         }
+        jdbcTemplate.update("delete from FILMS_DIRECTORS where film_id=?", film.getId());
         addDirectors(film);
         return getFilmId(film.getId());
     }
@@ -197,18 +202,54 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getFilmsRecommendations(int userId) {
 
-        String sql = "select t3.id , t3.name, t3.release_date, t3.description, t3.duration, t3.rate, t3.mpa_id, " +
-                "m.name as name_mpa, fg.genre_id, g.name as name_genre from (select * from (select f.id, f.name, " +
-                "f.release_date, f.description, f.duration, f.rate, f.mpa_id from films f join film_likes fl on " +
-                "f.id = fl.film_id where fl.user_id in (select t4.user_id from (select (count( f.id)) as count_film, " +
-                "fl.user_id from films f join film_likes fl on f.id = fl.film_id  " +
-                "where f.id in (select f.id from films f join film_likes fl on f.id = fl.film_id where fl.user_id = ?) " +
-                "and not fl.user_id = ? GROUP by fl.user_id order by count_film desc limit 1) as t4)) as t2 " +
-                "except " +
-                "select * from (select f.id, f.name, f.release_date, f.description, f.duration, f.rate, f.mpa_id  " +
-                "from films f join film_likes fl on f.id = fl.film_id  where fl.user_id = ?) as t1 ) as t3 " +
-                "join mpa m on t3.mpa_id = m.id   LEFT OUTER join films_genres fg on t3.id = fg.film_id " +
-                "LEFT OUTER join  genres g on   fg.genre_id = g.id order by  fg.genre_id;";
+        String sql = "select t3.id,\n" +
+                "       t3.name,\n" +
+                "       t3.release_date,\n" +
+                "       t3.description,\n" +
+                "       t3.duration,\n" +
+                "       t3.rate,\n" +
+                "       t3.mpa_id,\n" +
+                "       m.name as name_mpa,\n" +
+                "       fg.genre_id,\n" +
+                "       g.name as name_genre,\n" +
+                "       d.name as director_name,\n" +
+                "       fd.DIRECTOR_ID as director_id\n" +
+                "from (select *\n" +
+                "      from (select f.id,\n" +
+                "                   f.name,\n" +
+                "                   f.release_date,\n" +
+                "                   f.description,\n" +
+                "                   f.duration,\n" +
+                "                   f.rate,\n" +
+                "                   f.mpa_id\n" +
+                "            from films f\n" +
+                "                     join film_likes fl on\n" +
+                "                f.id = fl.film_id\n" +
+                "            where fl.user_id in (select t4.user_id\n" +
+                "                                 from (select (count(f.id)) as count_film,\n" +
+                "                                              fl.user_id\n" +
+                "                                       from films f\n" +
+                "                                                join film_likes fl on f.id = fl.film_id\n" +
+                "                                       where f.id in (select f.id\n" +
+                "                                                      from films f\n" +
+                "                                                               join film_likes fl on f.id = fl.film_id\n" +
+                "                                                      where fl.user_id = ?)\n" +
+                "                                         and not fl.user_id = ?\n" +
+                "                                       GROUP by fl.user_id\n" +
+                "                                       order by count_film desc\n" +
+                "                                       limit 1) as t4)) as t2\n" +
+                "      except\n" +
+                "      select *\n" +
+                "      from (select f.id, f.name, f.release_date, f.description, f.duration, f.rate, f.mpa_id\n" +
+                "            from films f\n" +
+                "                     join film_likes fl on f.id = fl.film_id\n" +
+                "            where fl.user_id = ?) as t1) as t3\n" +
+                "         join mpa m on t3.mpa_id = m.id\n" +
+                "         LEFT OUTER join films_genres fg on t3.id = fg.film_id\n" +
+                "         LEFT OUTER join genres g on fg.genre_id = g.id\n" +
+                "         LEFT OUTER join films_directors fd on t3.id = fd.film_id\n" +
+                "         LEFT OUTER join directors d on fd.DIRECTOR_ID = d.id\n" +
+                "order by fg.genre_id;";
 
         List<List<Film>> films = jdbcTemplate.query(sql, filmsRowMapper(), userId, userId, userId);
         if (films.size() == 1) {
@@ -231,26 +272,22 @@ public class FilmDbStorage implements FilmStorage {
             film.setRate(rs.getInt("rate"));
             Mpa mpa = new Mpa(rs.getInt("mpa_id"), rs.getString("name_mpa"));
             film.setMpa(mpa);
-            film.setDirectors(getListDirectors(rs));
-            if (rs.getString("name_genre") != null) {
+
+            if (rs.getString("director_name") != null || rs.getString("name_genre") != null) {
                 do {
-                    Genre genre = new Genre(rs.getInt("genre_id"), rs.getString("name_genre"));
-                    film.getGenres().add(genre);
+                    if (rs.getString("director_name") != null) {
+                        Director director = new Director(rs.getInt("director_id"), rs.getString("director_name"));
+                        film.getDirectors().add(director);
+                    }
+                    if (rs.getString("name_genre") != null) {
+                        Genre genre = new Genre(rs.getInt("genre_id"), rs.getString("name_genre"));
+                        film.getGenres().add(genre);
+                    }
                 } while (rs.next());
             }
+
             return film;
         };
-    }
-
-    private List<Director> getListDirectors(ResultSet resultSet) throws SQLException { //Возвращает список режиссеров
-        List<Director> list = new ArrayList<>();
-        if (resultSet.getString("director_name")!= null) {
-            do {
-                Director director = new Director(resultSet.getInt("director_id"), resultSet.getString("director_name"));
-                list.add(director);
-            } while (resultSet.next());
-        }
-        return list;
     }
 
     private RowMapper<List<Film>> filmsRowMapper() {
@@ -319,7 +356,7 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    private  List<Film> getSortedFilms(int id, String sort) {
+    private List<Film> getSortedFilms(int id, String sort) {
         List<Film> films = new ArrayList<>();
         String sqlSelect = "select f.id, f.name,  f.release_date, f.description, f.duration, f.rate, f.mpa_id, m.name as name_mpa, fg.genre_id,\n" +
                 "       g.name as name_genre, d.name as director_name, fd.DIRECTOR_ID as director_id from films f join mpa m on f.mpa_id = m.id\n" +
@@ -331,10 +368,11 @@ public class FilmDbStorage implements FilmStorage {
                 "ORDER BY " + sort;
 
         List<List<Film>> listsFilms = jdbcTemplate.query(sqlSelect, filmsRowMapper(), id);
-        if (Objects.nonNull(listsFilms.get(0))) {
-            films = listsFilms.get(0);
+        if (!listsFilms.isEmpty()) {
+           return listsFilms.get(0);
         }
-        return films;
+        throw new NotFoundException("Нет режиссера с id=" + id);
+
     }
 }
 
