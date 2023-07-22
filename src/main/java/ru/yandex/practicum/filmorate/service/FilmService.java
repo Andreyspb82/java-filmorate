@@ -89,6 +89,33 @@ public class FilmService {
         return new ArrayList<>(userFilms);
     }
 
+    public List<Film> filmsByGenreAndYear(int count, Optional<Integer> genreId, Optional<Integer> year) {
+        List<Film> filmsPopular = new ArrayList<>();
+        if (genreId.isPresent()  && year.isPresent()) {
+            filmsPopular = new ArrayList<>(filmStorage.getFilmsByGenreAndYear(genreId, year, count));
+        } else if (genreId.isPresent()) {
+            filmsPopular = new ArrayList<>(filmStorage.getFilmsByGenre(genreId, count));
+        } else if (year.isPresent()) {
+            filmsPopular = new ArrayList<>(filmStorage.getFilmsByYear(year, count));
+        } else {
+            filmsPopular = new ArrayList<>(filmStorage.getFilms());
+            if (filmsPopular.isEmpty()) {
+                log.warn("Список пустой");
+                throw new NotFoundException("Список пустой");
+            }
+            Collections.sort(filmsPopular, new Comparator<Film>() {
+                @Override
+                public int compare(Film o1, Film o2) {
+                    return o2.getRate() - o1.getRate();
+                }
+            });
+            return filmsPopular.stream()
+                    .limit(count)
+                    .collect(Collectors.toList());
+        }
+        return filmsPopular;
+    }
+
     private void validationFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             logValidationFilm();
