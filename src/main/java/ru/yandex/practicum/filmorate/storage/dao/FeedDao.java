@@ -15,15 +15,14 @@ public class FeedDao {
 
     private final JdbcTemplate jdbcTemplate;
 
-    //private static final Timestamp TEST_EVENT_TIME = Timestamp.from(Instant.ofEpochMilli(1670590017281L));
-    private static final Timestamp TEST_EVENT_TIME = Timestamp.from(Instant.now());
+    private static final Timestamp EVENT_TIME = Timestamp.from(Instant.now());
+
 
     public void feedUser(int userId, String eventType, String operation, int entityId) {
 
         String sqlFeed = "insert into feed (time_stamp, user_id, event_type, operation, entity_id) values (?, ?, ?, ?, ?);";
-        jdbcTemplate.update(sqlFeed, TEST_EVENT_TIME, userId, eventType, operation, entityId);
+        jdbcTemplate.update(sqlFeed, EVENT_TIME, userId, eventType, operation, entityId);
     }
-
 
 
 }
