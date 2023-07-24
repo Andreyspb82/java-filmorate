@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,6 +22,7 @@ import java.util.Map;
 public class ReviewDbStorage implements ReviewStorage {
 
     private final JdbcTemplate jdbcTemplate;
+    private final UserStorage userStorage;
 
     @Override
     public Review create(Review review) {
@@ -31,6 +33,8 @@ public class ReviewDbStorage implements ReviewStorage {
                 .withTableName("reviews")
                 .usingGeneratedKeyColumns("id");
         review.setReviewId(insert.executeAndReturnKey(reviewToMap(review)).intValue());
+
+        userStorage.feedUser(review.getUserId(), "REVIEW", "ADD", review.getReviewId());
         return review;
     }
 
@@ -44,11 +48,15 @@ public class ReviewDbStorage implements ReviewStorage {
             log.error("Отзыв для обновления с id = {} не найден", review.getReviewId());
             throw new NotFoundException("Отзыв для обновления с id = " + review.getReviewId() + " не найден");
         }
+        userStorage.feedUser(review.getUserId(), "REVIEW", "UPDATE", review.getReviewId());
         return findReviewById(review.getReviewId());
     }
 
     @Override
     public int delete(int id) {
+        Review review = findReviewById (id);
+        userStorage.feedUser(review.getUserId(), "REVIEW", "REMOVE", review.getReviewId());
+
         String sqlQuery = "DELETE " +
                 "FROM reviews " +
                 "WHERE reviews.id=? ";

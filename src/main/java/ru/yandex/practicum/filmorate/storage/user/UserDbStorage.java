@@ -8,10 +8,13 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +25,8 @@ import java.util.Map;
 public class UserDbStorage implements UserStorage {
     private final FilmStorage filmStorage;
     private JdbcTemplate jdbcTemplate;
+
+    private static final Timestamp TEST_EVENT_TIME = Timestamp.from(Instant.ofEpochMilli(1670590017281L));
 
     @Override
     public User putUser(User user) {
@@ -83,6 +88,8 @@ public class UserDbStorage implements UserStorage {
                 userId,
                 friendId
         );
+
+        feedUser( userId, "FRIEND", "ADD", friendId);
     }
 
     @Override
@@ -94,6 +101,8 @@ public class UserDbStorage implements UserStorage {
     @Override
     public void removeFriendId(int userId, int friendId) {
         jdbcTemplate.update("delete from friends where user_id = ? and friend_id = ?;", userId, friendId);
+
+         feedUser( userId, "FRIEND", "REMOVE", friendId);
     }
 
 
@@ -120,6 +129,29 @@ public class UserDbStorage implements UserStorage {
         return filmStorage.getFilmsRecommendations(userId);
     }
 
+    @Override
+    public List<Feed> getFeedsId(int userId) {
+        String sql = "select * from feed where user_Id = ?;";
+        return jdbcTemplate.query(
+                sql,
+                feedRowMapper(),
+                userId
+        );
+    }
+
+    private RowMapper<Feed> feedRowMapper() {
+        return (rs, rowNum) -> new Feed(
+                rs.getInt("event_id"),
+                rs.getTimestamp("time_stamp"),
+                rs.getInt("user_id"),
+                rs.getString("event_type"),
+                rs.getString("operation"),
+                rs.getInt("entity_id")
+        );
+
+
+    }
+
 
     private RowMapper<User> userRowMapper() {
         return (rs, rowNum) -> new User(
@@ -129,6 +161,13 @@ public class UserDbStorage implements UserStorage {
                 rs.getString("name"),
                 rs.getDate("birthday").toLocalDate()
         );
+    }
+
+    @Override
+    public void feedUser(int userId, String eventType, String operation, int entityId) {
+
+        String sqlFeed = "insert into feed (time_stamp, user_id, event_type, operation, entity_id) values (?, ?, ?, ?, ?);";
+        jdbcTemplate.update(sqlFeed, TEST_EVENT_TIME, userId, eventType, operation, entityId);
     }
 
 }
