@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.dao.FeedDao;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.sql.ResultSet;
@@ -22,7 +23,7 @@ import java.util.Map;
 public class ReviewDbStorage implements ReviewStorage {
 
     private final JdbcTemplate jdbcTemplate;
-    private final UserStorage userStorage;
+    private final FeedDao feedDao;
 
     @Override
     public Review create(Review review) {
@@ -34,12 +35,13 @@ public class ReviewDbStorage implements ReviewStorage {
                 .usingGeneratedKeyColumns("id");
         review.setReviewId(insert.executeAndReturnKey(reviewToMap(review)).intValue());
 
-        userStorage.feedUser(review.getUserId(), "REVIEW", "ADD", review.getReviewId());
+        feedDao.feedUser(review.getUserId(), "REVIEW", "ADD", review.getReviewId());
         return review;
     }
 
     @Override
     public Review update(Review review) {
+        //feedDao.feedUser(review.getUserId(), "REVIEW", "UPDATE", review.getReviewId());
         String sqlQuery = "UPDATE reviews " +
                 "SET content=?, is_positive=?" +
                 "WHERE id=? ";
@@ -48,14 +50,15 @@ public class ReviewDbStorage implements ReviewStorage {
             log.error("Отзыв для обновления с id = {} не найден", review.getReviewId());
             throw new NotFoundException("Отзыв для обновления с id = " + review.getReviewId() + " не найден");
         }
-        userStorage.feedUser(review.getUserId(), "REVIEW", "UPDATE", review.getReviewId());
+        Review review1 = findReviewById (review.getReviewId());
+        feedDao.feedUser(review1.getUserId(), "REVIEW", "UPDATE", review1.getReviewId());
         return findReviewById(review.getReviewId());
     }
 
     @Override
     public int delete(int id) {
         Review review = findReviewById (id);
-        userStorage.feedUser(review.getUserId(), "REVIEW", "REMOVE", review.getReviewId());
+        feedDao.feedUser(review.getUserId(), "REVIEW", "REMOVE", review.getReviewId());
 
         String sqlQuery = "DELETE " +
                 "FROM reviews " +

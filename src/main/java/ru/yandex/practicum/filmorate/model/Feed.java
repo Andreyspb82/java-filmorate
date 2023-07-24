@@ -14,16 +14,18 @@ public class Feed {
     @PositiveOrZero
     private int eventId;
 
-    //private Instant timestamp;
-    private Timestamp timestamp;
-
     private int userId;
+
+    private int entityId;
 
     private String eventType;
 
     private String operation;
 
-    private int entityId;
+    private Long timestamp;
+
+    public Feed() {
+    }
 
 
 }
