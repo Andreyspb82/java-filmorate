@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.enums.EventType;
 import ru.yandex.practicum.filmorate.model.enums.Operation;
 import ru.yandex.practicum.filmorate.storage.dao.FeedDao;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -39,13 +38,13 @@ public class ReviewDbStorage implements ReviewStorage {
                 .usingGeneratedKeyColumns("id");
         review.setReviewId(insert.executeAndReturnKey(reviewToMap(review)).intValue());
 
-        feedDao.feedUser(Timestamp.from(Instant.now()), review.getUserId(), EventType.REVIEW, Operation.ADD, review.getReviewId());
+        feedDao.feedUser(Timestamp.from(Instant.now()), review.getUserId(), EventType.REVIEW, Operation.ADD,
+                review.getReviewId());
         return review;
     }
 
     @Override
     public Review update(Review review) {
-        //feedDao.feedUser(review.getUserId(), "REVIEW", "UPDATE", review.getReviewId());
         String sqlQuery = "UPDATE reviews " +
                 "SET content=?, is_positive=?" +
                 "WHERE id=? ";
@@ -54,15 +53,17 @@ public class ReviewDbStorage implements ReviewStorage {
             log.error("Отзыв для обновления с id = {} не найден", review.getReviewId());
             throw new NotFoundException("Отзыв для обновления с id = " + review.getReviewId() + " не найден");
         }
-        Review review1 = findReviewById (review.getReviewId());
-        feedDao.feedUser(Timestamp.from(Instant.now()), review1.getUserId(), EventType.REVIEW, Operation.UPDATE, review1.getReviewId());
+        Review reviewFeed = findReviewById(review.getReviewId());
+        feedDao.feedUser(Timestamp.from(Instant.now()), reviewFeed.getUserId(), EventType.REVIEW, Operation.UPDATE,
+                reviewFeed.getReviewId());
         return findReviewById(review.getReviewId());
     }
 
     @Override
     public int delete(int id) {
-        Review review = findReviewById (id);
-        feedDao.feedUser(Timestamp.from(Instant.now()), review.getUserId(), EventType.REVIEW, Operation.REMOVE, review.getReviewId());
+        Review review = findReviewById(id);
+        feedDao.feedUser(Timestamp.from(Instant.now()), review.getUserId(), EventType.REVIEW, Operation.REMOVE,
+                review.getReviewId());
 
         String sqlQuery = "DELETE " +
                 "FROM reviews " +

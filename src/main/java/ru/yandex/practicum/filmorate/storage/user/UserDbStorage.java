@@ -18,7 +18,6 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +30,6 @@ public class UserDbStorage implements UserStorage {
     private final FilmStorage filmStorage;
     private final FeedDao feedDao;
     private JdbcTemplate jdbcTemplate;
-
-    private static final Timestamp TEST_EVENT_TIME = Timestamp.from(Instant.ofEpochMilli(1670590017281L));
 
     @Override
     public User putUser(User user) {
@@ -151,10 +148,9 @@ public class UserDbStorage implements UserStorage {
             feed.setEventId(rs.getInt("event_id"));
 
             Timestamp timestamp = rs.getTimestamp("time_stamp");
-            LocalDateTime localDateTime = timestamp.toLocalDateTime();
-            Instant instant = localDateTime.toInstant(ZoneOffset.ofHours(0));
-            Long time = instant.toEpochMilli();
-            feed.setTimestamp(time);
+            Instant instant = (timestamp.toLocalDateTime()).toInstant(ZoneOffset.ofHours(0));
+            long milliseconds = instant.toEpochMilli();
+            feed.setTimestamp(milliseconds);
 
             feed.setUserId(rs.getInt("user_id"));
             feed.setEventType(rs.getString("event_type"));

@@ -10,7 +10,7 @@ import javax.validation.constraints.NotBlank;
 public class Director {
 
     private int id;
-    //Проверяем что имя заполнено
+
     @NotBlank(message = "Имя не может быть пустым")
     private String name;
 

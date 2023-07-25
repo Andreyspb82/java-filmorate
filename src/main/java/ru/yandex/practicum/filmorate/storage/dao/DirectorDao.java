@@ -35,10 +35,10 @@ public class DirectorDao {
 
     public Director updateDirector(Director director) {
         String sqlUpdate = "update directors set name = ? WHERE id =?;";
-       if (Objects.nonNull(getDirectorById(director.getId()))) {
-       jdbcTemplate.update(sqlUpdate, director.getName(), director.getId());
-       }
-       return director;
+        if (Objects.nonNull(getDirectorById(director.getId()))) {
+            jdbcTemplate.update(sqlUpdate, director.getName(), director.getId());
+        }
+        return director;
     }
 
     public Director getDirectorById(int id) {
@@ -54,13 +54,13 @@ public class DirectorDao {
     public List<Director> getAllDirectors() {
         String sqlSelect = "select * from directors ;";
         List<Director> directors = new ArrayList<>();
-        directors =  jdbcTemplate.query(sqlSelect,this::mapRowToDirector);
+        directors = jdbcTemplate.query(sqlSelect, this::mapRowToDirector);
         return directors;
     }
 
     public boolean deleteDirectorById(int id) {
-       String sqlDelete = "delete from directors where id = ?";
-       return jdbcTemplate.update(sqlDelete,id) > 0;
+        String sqlDelete = "delete from directors where id = ?";
+        return jdbcTemplate.update(sqlDelete, id) > 0;
     }
 
     private Director mapRowToDirector(ResultSet resultSet, int rowNum) throws SQLException {

@@ -4,7 +4,6 @@ import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.sql.Timestamp;
 import java.util.List;
 
 public interface UserStorage {
@@ -28,5 +27,5 @@ public interface UserStorage {
 
     List<Film> getFilmsRecommendations(int userId);
 
-    List<Feed> getFeedsId (int userId);
+    List<Feed> getFeedsId(int userId);
 }

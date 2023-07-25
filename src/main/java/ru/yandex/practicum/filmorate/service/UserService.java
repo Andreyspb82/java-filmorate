@@ -80,11 +80,9 @@ public class UserService {
         return userStorage.getFilmsRecommendations(userId);
     }
 
-    // добавил метод
     public List<Feed> getFeedsId(int userId) {
         userStorage.getUserId(userId);
         return userStorage.getFeedsId(userId);
-        //return null;
     }
 
 
