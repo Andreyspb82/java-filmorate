@@ -8,9 +8,14 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.Operation;
+import ru.yandex.practicum.filmorate.storage.dao.FeedDao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +26,7 @@ import java.util.Map;
 public class ReviewDbStorage implements ReviewStorage {
 
     private final JdbcTemplate jdbcTemplate;
+    private final FeedDao feedDao;
 
     @Override
     public Review create(Review review) {
@@ -31,6 +37,9 @@ public class ReviewDbStorage implements ReviewStorage {
                 .withTableName("reviews")
                 .usingGeneratedKeyColumns("id");
         review.setReviewId(insert.executeAndReturnKey(reviewToMap(review)).intValue());
+
+        feedDao.feedUser(Timestamp.from(Instant.now()), review.getUserId(), EventType.REVIEW, Operation.ADD,
+                review.getReviewId());
         return review;
     }
 
@@ -44,11 +53,18 @@ public class ReviewDbStorage implements ReviewStorage {
             log.error("Отзыв для обновления с id = {} не найден", review.getReviewId());
             throw new NotFoundException("Отзыв для обновления с id = " + review.getReviewId() + " не найден");
         }
+        Review reviewFeed = findReviewById(review.getReviewId());
+        feedDao.feedUser(Timestamp.from(Instant.now()), reviewFeed.getUserId(), EventType.REVIEW, Operation.UPDATE,
+                reviewFeed.getReviewId());
         return findReviewById(review.getReviewId());
     }
 
     @Override
     public int delete(int id) {
+        Review review = findReviewById(id);
+        feedDao.feedUser(Timestamp.from(Instant.now()), review.getUserId(), EventType.REVIEW, Operation.REMOVE,
+                review.getReviewId());
+
         String sqlQuery = "DELETE " +
                 "FROM reviews " +
                 "WHERE reviews.id=? ";

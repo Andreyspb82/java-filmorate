@@ -8,10 +8,17 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.Operation;
+import ru.yandex.practicum.filmorate.storage.dao.FeedDao;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +28,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class UserDbStorage implements UserStorage {
     private final FilmStorage filmStorage;
+    private final FeedDao feedDao;
     private JdbcTemplate jdbcTemplate;
 
     @Override
@@ -83,6 +91,8 @@ public class UserDbStorage implements UserStorage {
                 userId,
                 friendId
         );
+
+        feedDao.feedUser(Timestamp.from(Instant.now()), userId, EventType.FRIEND, Operation.ADD, friendId);
     }
 
     @Override
@@ -94,6 +104,8 @@ public class UserDbStorage implements UserStorage {
     @Override
     public void removeFriendId(int userId, int friendId) {
         jdbcTemplate.update("delete from friends where user_id = ? and friend_id = ?;", userId, friendId);
+
+        feedDao.feedUser(Timestamp.from(Instant.now()), userId, EventType.FRIEND, Operation.REMOVE, friendId);
     }
 
 
@@ -120,6 +132,33 @@ public class UserDbStorage implements UserStorage {
         return filmStorage.getFilmsRecommendations(userId);
     }
 
+    @Override
+    public List<Feed> getFeedsId(int userId) {
+        String sql = "select * from feed where user_Id = ?;";
+        return jdbcTemplate.query(
+                sql,
+                feedRowMapper(),
+                userId
+        );
+    }
+
+    private RowMapper<Feed> feedRowMapper() {
+        return (rs, rowNum) -> {
+            Feed feed = new Feed();
+            feed.setEventId(rs.getInt("event_id"));
+
+            Timestamp timestamp = rs.getTimestamp("time_stamp");
+            Instant instant = (timestamp.toLocalDateTime()).toInstant(ZoneOffset.ofHours(0));
+            long milliseconds = instant.toEpochMilli();
+            feed.setTimestamp(milliseconds);
+
+            feed.setUserId(rs.getInt("user_id"));
+            feed.setEventType(rs.getString("event_type"));
+            feed.setOperation(rs.getString("operation"));
+            feed.setEntityId(rs.getInt("entity_id"));
+            return feed;
+        };
+    }
 
     private RowMapper<User> userRowMapper() {
         return (rs, rowNum) -> new User(
