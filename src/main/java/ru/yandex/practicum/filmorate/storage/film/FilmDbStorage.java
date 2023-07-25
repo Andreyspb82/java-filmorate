@@ -156,42 +156,46 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getFilmsByGenreAndYear(Optional<Integer> genreId, Optional<Integer> year, int count) {
-        String sql = "select  f.id, f.name,  f.release_date, f.description, f.duration, f.rate, f.mpa_id, " +
-                "m.name as name_mpa, fg.genre_id,  g.name as name_genre,  d.name as director_name, fd.DIRECTOR_ID as director_id from films f join mpa m on f.mpa_id = m.id  " +
-                "LEFT OUTER join films_genres fg on f.id = fg.film_id  " +
+    public List<Film> getFilmsByGenreAndYear(int genreId, int year) {
+        String sql = "select  f.id, f.name,  f.release_date, f.description, f.duration, t1.count_likes as rate,  f.mpa_id,  \n" +
+                "                m.name as name_mpa, fg.genre_id,  g.name as name_genre, d.name as director_name, fd.DIRECTOR_ID as director_id \n" +
+                "from films f join mpa m on f.mpa_id = m.id\n" +
+                "LEFT OUTER join (select count (fl.user_id) as count_likes, film_id from    film_likes fl GROUP by film_id order by film_id) as t1 on f.id = t1.film_id\n" +
+                "LEFT OUTER join films_genres fg on f.id = fg.film_id\n" +
+                "LEFT OUTER join films_directors fd on f.id = fd.film_id \n" +
+                "LEFT OUTER join directors d on fd.DIRECTOR_ID = d.id \n" +
                 "LEFT OUTER join  genres g on   fg.genre_id = g.id " +
-                "LEFT OUTER join films_directors fd on f.id = fd.film_id " +
-                "LEFT OUTER join directors d on fd.director_id = d.id  " +
-                "WHERE f.id = (SELECT fg.film_id FROM films_genres fg WHERE fg.genre_id = ?) AND EXTRACT (YEAR FROM CAST (f.release_date AS DATE)) = ? " +
-                "ORDER BY f.rate DESC LIMIT ?";
-        return jdbcTemplate.query(sql, filmRowMapper(), genreId.get(), year.get(), count);
+                "WHERE fg.genre_id = ? AND EXTRACT (YEAR FROM CAST (f.release_date AS DATE)) = ? ";
+        return jdbcTemplate.query(sql, filmRowMapper(), genreId, year);
     }
 
     @Override
-    public List<Film> getFilmsByGenre(Optional<Integer> genreId, int count) {
-        String sql = "select  f.id, f.name,  f.release_date, f.description, f.duration, f.rate, f.mpa_id,  " +
-                "m.name as name_mpa, fg.genre_id,  g.name as name_genre, d.name as director_name, fd.DIRECTOR_ID as director_id from films f join mpa m on f.mpa_id = m.id  " +
-                "LEFT OUTER join films_genres fg on f.id = fg.film_id  " +
+    public List<Film> getFilmsByGenre(int genreId) {
+        String sql = "select  f.id, f.name,  f.release_date, f.description, f.duration, t1.count_likes as rate,  f.mpa_id,  \n" +
+                "                m.name as name_mpa, fg.genre_id,  g.name as name_genre, d.name as director_name, fd.DIRECTOR_ID as director_id \n" +
+                "from films f join mpa m on f.mpa_id = m.id\n" +
+                "LEFT OUTER join (select count (fl.user_id) as count_likes, film_id from    film_likes fl GROUP by film_id order by film_id) as t1 on f.id = t1.film_id\n" +
+                "LEFT OUTER join films_genres fg on f.id = fg.film_id\n" +
+                "LEFT OUTER join films_directors fd on f.id = fd.film_id \n" +
+                "LEFT OUTER join directors d on fd.DIRECTOR_ID = d.id \n" +
                 "LEFT OUTER join  genres g on   fg.genre_id = g.id " +
-                "LEFT OUTER join films_directors fd on f.id = fd.film_id " +
-                "LEFT OUTER join directors d on fd.director_id = d.id  " +
-                "WHERE f.id = (SELECT fg.film_id FROM films_genres fg WHERE fg.genre_id = ?) " +
-                "ORDER BY f.rate DESC LIMIT ?";
-        return jdbcTemplate.query(sql, filmRowMapper(), genreId.get(), count);
+                "WHERE fg.genre_id = ?";
+        List<Film> query = jdbcTemplate.query(sql, filmRowMapper(), genreId);
+        return query;
     }
 
     @Override
-    public List<Film> getFilmsByYear(Optional<Integer> year, int count) {
-        String sql = "select  f.id, f.name,  f.release_date, f.description, f.duration, f.rate, f.mpa_id,  " +
-                "m.name as name_mpa, fg.genre_id,  g.name as name_genre, d.name as director_name, fd.DIRECTOR_ID as director_id from films f join mpa m on f.mpa_id = m.id  " +
-                "LEFT OUTER join films_genres fg on f.id = fg.film_id  " +
+    public List<Film> getFilmsByYear(int year) {
+        String sql ="select  f.id, f.name,  f.release_date, f.description, f.duration, t1.count_likes as rate,  f.mpa_id,  \n" +
+                "                m.name as name_mpa, fg.genre_id,  g.name as name_genre, d.name as director_name, fd.DIRECTOR_ID as director_id \n" +
+                "from films f join mpa m on f.mpa_id = m.id\n" +
+                "LEFT OUTER join (select count (fl.user_id) as count_likes, film_id from    film_likes fl GROUP by film_id order by film_id) as t1 on f.id = t1.film_id\n" +
+                "LEFT OUTER join films_genres fg on f.id = fg.film_id\n" +
+                "LEFT OUTER join films_directors fd on f.id = fd.film_id \n" +
+                "LEFT OUTER join directors d on fd.DIRECTOR_ID = d.id \n" +
                 "LEFT OUTER join  genres g on   fg.genre_id = g.id " +
-                "LEFT OUTER join films_directors fd on f.id = fd.film_id " +
-                "LEFT OUTER join directors d on fd.director_id = d.id  " +
-                "WHERE EXTRACT (YEAR FROM CAST (f.release_date AS DATE)) = ? " +
-                "ORDER BY f.rate DESC LIMIT ?";
-        return jdbcTemplate.query(sql, filmRowMapper(), year.get(), count);
+                "WHERE EXTRACT (YEAR FROM CAST (f.release_date AS DATE)) = ? ";
+        return jdbcTemplate.query(sql, filmRowMapper(), year);
     }
 
     @Override

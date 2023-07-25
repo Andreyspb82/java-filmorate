@@ -115,29 +115,38 @@ public class FilmService {
     }
 
     public List<Film> filmsByGenreAndYear(int count, Optional<Integer> genreId, Optional<Integer> year) {
-        List<Film> filmsPopular = new ArrayList<>();
+        List<Film> filmsPopularNew = new ArrayList<>();
+        List<Film> filmsPopularOld = new ArrayList<>();
         if (genreId.isPresent() && year.isPresent()) {
-            filmsPopular = new ArrayList<>(filmStorage.getFilmsByGenreAndYear(genreId, year, count));
+            filmsPopularNew = new ArrayList<>(filmStorage.getFilmsByGenreAndYear(genreId.get(), year.get()));
         } else if (genreId.isPresent()) {
-            filmsPopular = new ArrayList<>(filmStorage.getFilmsByGenre(genreId, count));
+            filmsPopularNew = new ArrayList<>(filmStorage.getFilmsByGenre(genreId.get()));
         } else if (year.isPresent()) {
-            filmsPopular = new ArrayList<>(filmStorage.getFilmsByYear(year, count));
+            filmsPopularNew = new ArrayList<>(filmStorage.getFilmsByYear(year.get()));
         } else {
-            filmsPopular = new ArrayList<>(filmStorage.getFilms());
-            if (filmsPopular.isEmpty()) {
+            filmsPopularOld = new ArrayList<>(filmStorage.getFilms());
+            if (filmsPopularOld.isEmpty()) {
                 log.warn("Список пустой");
                 throw new NotFoundException("Список пустой");
             }
-            Collections.sort(filmsPopular, new Comparator<Film>() {
+            Collections.sort(filmsPopularOld, new Comparator<Film>() {
                 @Override
                 public int compare(Film o1, Film o2) {
                     return o2.getRate() - o1.getRate();
                 }
             });
-            return filmsPopular.stream()
+            return filmsPopularOld.stream()
                     .limit(count)
                     .collect(Collectors.toList());
         }
-        return filmsPopular;
+        Collections.sort(filmsPopularNew, new Comparator<Film>() {
+            @Override
+            public int compare(Film o1, Film o2) {
+                return o1.getRate() - o2.getRate();
+            }
+        });
+        return filmsPopularNew.stream()
+                .limit(count)
+                .collect(Collectors.toList());
     }
 }
