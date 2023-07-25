@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,11 +12,13 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.service.GenreService;
 import ru.yandex.practicum.filmorate.service.MpaService;
 
+import javax.validation.Valid;
 import java.util.List;
 
+@Slf4j
+@Validated
 @RestController
 @RequestMapping("/genres")
-@Slf4j
 @AllArgsConstructor
 public class GenreController {
 
@@ -28,7 +31,7 @@ public class GenreController {
     }
 
     @GetMapping("/{id}")
-    public Genre getGenreId(@PathVariable int id) {
+    public Genre getGenreId(@Valid @PathVariable int id) {
         return genreService.getGenreId(id);
     }
 
