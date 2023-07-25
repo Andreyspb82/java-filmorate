@@ -11,6 +11,7 @@ import javax.validation.constraints.PositiveOrZero;
 @Data
 @Builder(toBuilder = true)
 public class Review {
+
     @PositiveOrZero
     private int reviewId;
 

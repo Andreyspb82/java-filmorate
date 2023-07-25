@@ -3,13 +3,11 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -21,7 +19,6 @@ public class UserService {
 
 
     public User createUser(User user) {
-        validationUser(user);
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
@@ -29,7 +26,6 @@ public class UserService {
     }
 
     public User updateUser(User user) {
-        validationUser(user);
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
@@ -84,23 +80,4 @@ public class UserService {
         userStorage.getUserId(userId);
         return userStorage.getFeedsId(userId);
     }
-
-
-    private void validationUser(User user) {
-        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            logValidationUser();
-            throw new ValidationException("Некорректный адрес электронной почты");
-        } else if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            logValidationUser();
-            throw new ValidationException("Логин не может быть пустым или содержать пробелы");
-        } else if (user.getBirthday().isAfter(LocalDate.now())) {
-            logValidationUser();
-            throw new ValidationException("Дата рождения не может быть в будущем");
-        }
-    }
-
-    private void logValidationUser() {
-        log.warn("Валидация пользователя не пройдена");
-    }
-
 }

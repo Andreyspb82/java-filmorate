@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
@@ -22,12 +21,10 @@ public class FilmService {
     private static final LocalDate EARLIEST_AVAILABLE_DATE = LocalDate.of(1895, 12, 28);
 
     public Film createFilm(Film film) {
-        validationFilm(film);
         return filmStorage.putFilm(film);
     }
 
     public Film updateFilm(Film film) {
-        validationFilm(film);
         return filmStorage.updateFilm(film);
     }
 
@@ -143,25 +140,4 @@ public class FilmService {
         }
         return filmsPopular;
     }
-
-    private void validationFilm(Film film) {
-        if (film.getName() == null || film.getName().isBlank()) {
-            logValidationFilm();
-            throw new ValidationException("Название фильма не может быть пустым");
-        } else if (film.getDescription().length() > 200) {
-            logValidationFilm();
-            throw new ValidationException("Описание фильма не должно превышать 200 символов");
-        } else if (film.getReleaseDate().isBefore(EARLIEST_AVAILABLE_DATE)) {
-            logValidationFilm();
-            throw new ValidationException("Дата релиза фильма должна быть не раньше чем 28 декабря 1895 года");
-        } else if (film.getDuration() <= 0) {
-            logValidationFilm();
-            throw new ValidationException("Продолжительность фильма должна быть положительной");
-        }
-    }
-
-    private void logValidationFilm() {
-        log.warn("Валидация фильма не пройдена");
-    }
-
 }
