@@ -12,11 +12,15 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.Operation;
 import ru.yandex.practicum.filmorate.storage.dao.FeedDao;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -230,14 +234,14 @@ public class FilmDbStorage implements FilmStorage {
     public void addLikeFilm(int filmId, int userId) {
         String sgl = "insert into film_likes (film_id, user_id) values (?, ?)";
         jdbcTemplate.update(sgl, filmId, userId);
-        feedDao.feedUser(userId, "LIKE", "ADD", filmId);
+        feedDao.feedUser(Timestamp.from(Instant.now()), userId, EventType.LIKE, Operation.ADD, filmId);
     }
 
     @Override
     public void removeLikeFilm(int filmId, int userId) {
         String sgl = "delete from film_likes where film_id = ? and user_id = ?;";
         jdbcTemplate.update(sgl, filmId, userId);
-        feedDao.feedUser(userId, "LIKE", "REMOVE", filmId);
+        feedDao.feedUser(Timestamp.from(Instant.now()), userId, EventType.LIKE, Operation.REMOVE, filmId);
     }
 
     @Override

@@ -27,5 +27,4 @@ public class Feed {
     public Feed() {
     }
 
-
 }

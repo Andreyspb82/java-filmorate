@@ -29,6 +29,4 @@ public interface UserStorage {
     List<Film> getFilmsRecommendations(int userId);
 
     List<Feed> getFeedsId (int userId);
-
-    public void feedUser(int userId, String eventType, String operation, int entityId);
 }

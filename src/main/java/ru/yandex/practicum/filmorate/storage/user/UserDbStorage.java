@@ -11,6 +11,8 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.Operation;
 import ru.yandex.practicum.filmorate.storage.dao.FeedDao;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
@@ -93,7 +95,7 @@ public class UserDbStorage implements UserStorage {
                 friendId
         );
 
-        feedDao.feedUser(userId, "FRIEND", "ADD", friendId);
+        feedDao.feedUser(Timestamp.from(Instant.now()), userId, EventType.FRIEND, Operation.ADD, friendId);
     }
 
     @Override
@@ -106,7 +108,7 @@ public class UserDbStorage implements UserStorage {
     public void removeFriendId(int userId, int friendId) {
         jdbcTemplate.update("delete from friends where user_id = ? and friend_id = ?;", userId, friendId);
 
-        feedDao.feedUser(userId, "FRIEND", "REMOVE", friendId);
+        feedDao.feedUser(Timestamp.from(Instant.now()), userId, EventType.FRIEND, Operation.REMOVE, friendId);
     }
 
 
@@ -170,13 +172,6 @@ public class UserDbStorage implements UserStorage {
                 rs.getString("name"),
                 rs.getDate("birthday").toLocalDate()
         );
-    }
-
-    @Override
-    public void feedUser(int userId, String eventType, String operation, int entityId) {
-
-        String sqlFeed = "insert into feed (time_stamp, user_id, event_type, operation, entity_id) values (?, ?, ?, ?, ?);";
-        jdbcTemplate.update(sqlFeed, TEST_EVENT_TIME, userId, eventType, operation, entityId);
     }
 
 }
