@@ -68,13 +68,19 @@ public class FilmDbStorage implements FilmStorage {
 
     private void addDirectors(Film film) { // Добавляет режиссеров из фильма в таблицу films_directors
         List<Director> directors = film.getDirectors().stream().distinct().collect(Collectors.toList());
-        String sqlInsert = "insert into films_directors (film_id, director_id) values(?, ?);";
-        if (directors.size() > 0) {
+        if (!directors.isEmpty()) {
+            StringBuilder sqlBuilder = new StringBuilder("insert into films_directors (film_id, director_id) values ");
             for (int i = 0; i < directors.size(); i++) {
-                jdbcTemplate.update(sqlInsert, film.getId(), directors.get(i).getId());
+                sqlBuilder.append("(" + film.getId() + ", " + directors.get(i).getId() + ")");
+                if ((i < (directors.size() - 1))) {
+                    sqlBuilder.append(",");
+                }
             }
+            String sqlDirector = sqlBuilder.toString();
+            jdbcTemplate.update(sqlDirector);
         }
     }
+
 
     @Override
     public Film updateFilm(Film film) {
