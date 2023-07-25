@@ -89,9 +89,37 @@ public class FilmService {
         return new ArrayList<>(userFilms);
     }
 
+    public List<Film> searchFilms(String query, List<String> by) {
+        List<Film> filmsPopular = new ArrayList<>();
+        if (by.size() > 1) {
+            if ((by.get(0).equals("director") || by.get(0).equals("title")) && (by.get(1).equals("title")
+                    || by.get(1).equals("director")) && !(by.get(0).equals(by.get(1)))) {
+                filmsPopular = filmStorage.searchFilmsByDirectorAndTitle(query);
+            }
+        } else if (by.size() == 1) {
+            if (by.get(0).equals("director")) {
+                filmsPopular = filmStorage.searchFilmsByDirector(query);
+            } else if (by.get(0).equals("title")) {
+                filmsPopular = filmStorage.searchFilmsByTitle(query);
+            } else {
+                return filmsPopular;
+            }
+        } else {
+            return filmsPopular;
+        }
+        Collections.sort(filmsPopular, new Comparator<Film>() {
+            @Override
+            public int compare(Film o1, Film o2) {
+                return o2.getRate() - o1.getRate();
+            }
+        });
+        return filmsPopular.stream()
+                .collect(Collectors.toList());
+    }
+
     public List<Film> filmsByGenreAndYear(int count, Optional<Integer> genreId, Optional<Integer> year) {
         List<Film> filmsPopular = new ArrayList<>();
-        if (genreId.isPresent()  && year.isPresent()) {
+        if (genreId.isPresent() && year.isPresent()) {
             filmsPopular = new ArrayList<>(filmStorage.getFilmsByGenreAndYear(genreId, year, count));
         } else if (genreId.isPresent()) {
             filmsPopular = new ArrayList<>(filmStorage.getFilmsByGenre(genreId, count));
