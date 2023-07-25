@@ -21,5 +21,5 @@ public class FeedDao {
         String sqlFeed = "insert into feed (time_stamp, user_id, event_type, operation, entity_id) values (?, ?, ?, ?, ?);";
         jdbcTemplate.update(sqlFeed, timestamp, userId, String.valueOf(eventType), String.valueOf(operation), entityId);
     }
-
+// test
 }
