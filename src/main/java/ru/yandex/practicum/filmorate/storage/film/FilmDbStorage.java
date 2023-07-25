@@ -20,7 +20,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -186,7 +189,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getFilmsByYear(int year) {
-        String sql ="select  f.id, f.name,  f.release_date, f.description, f.duration, t1.count_likes as rate,  f.mpa_id,  \n" +
+        String sql = "select  f.id, f.name,  f.release_date, f.description, f.duration, t1.count_likes as rate,  f.mpa_id,  \n" +
                 "                m.name as name_mpa, fg.genre_id,  g.name as name_genre, d.name as director_name, fd.DIRECTOR_ID as director_id \n" +
                 "from films f join mpa m on f.mpa_id = m.id\n" +
                 "LEFT OUTER join (select count (fl.user_id) as count_likes, film_id from    film_likes fl GROUP by film_id order by film_id) as t1 on f.id = t1.film_id\n" +
