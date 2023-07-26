@@ -53,28 +53,6 @@ public class FilmService {
         filmStorage.removeLikeFilm(filmId, userId);
     }
 
-//    public List<Film> ratingFilms(int count) {
-//        List<Film> ratingFilms = new ArrayList<>(filmStorage.getFilms());
-//
-//
-//        if (ratingFilms.isEmpty()) {
-//            log.warn("Список пустой");
-//            throw new NotFoundException("Список пустой");
-//        }
-//
-//        Collections.sort(ratingFilms, new Comparator<Film>() {
-//            @Override
-//            public int compare(Film o1, Film o2) {
-//                return o2.getRate() - o1.getRate();
-//            }
-//        });
-//
-//        return ratingFilms.stream()
-//                .limit(count)
-//                .collect(Collectors.toList());
-//
-//    }
-
     public List<Film> getFilmsByDirector(int id, String sort) {
         return filmStorage.getFilmsByDirector(id, sort);
     }

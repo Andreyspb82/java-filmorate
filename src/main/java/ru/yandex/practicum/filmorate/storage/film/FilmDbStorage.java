@@ -59,8 +59,7 @@ public class FilmDbStorage implements FilmStorage {
                     sqlBuilder.append(",");
                 }
             }
-            String sqlGenres = sqlBuilder.toString();
-            jdbcTemplate.update(sqlGenres);
+            jdbcTemplate.update(sqlBuilder.toString());
         }
         addDirectors(film);
         return film;
@@ -76,8 +75,7 @@ public class FilmDbStorage implements FilmStorage {
                     sqlBuilder.append(",");
                 }
             }
-            String sqlDirector = sqlBuilder.toString();
-            jdbcTemplate.update(sqlDirector);
+            jdbcTemplate.update(sqlBuilder.toString());
         }
     }
 
@@ -217,7 +215,7 @@ public class FilmDbStorage implements FilmStorage {
                 "where f.id in (select f.id from films f where EXTRACT (YEAR FROM CAST (f.release_date AS DATE)) = ?) \n" +
                 "order by f.id, fg.genre_id ;";
 
-        List<List<Film>> films = jdbcTemplate.query(sql, filmsRowMapper(), year.get() );
+        List<List<Film>> films = jdbcTemplate.query(sql, filmsRowMapper(), year.get());
         if (films.size() == 1) {
             return films.get(0);
         } else {
