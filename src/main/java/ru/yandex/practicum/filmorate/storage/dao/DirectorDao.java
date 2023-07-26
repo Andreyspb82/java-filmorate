@@ -14,7 +14,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Component
 @Slf4j
@@ -35,8 +34,9 @@ public class DirectorDao {
 
     public Director updateDirector(Director director) {
         String sqlUpdate = "update directors set name = ? WHERE id =?;";
-        if (Objects.nonNull(getDirectorById(director.getId()))) {
-            jdbcTemplate.update(sqlUpdate, director.getName(), director.getId());
+        boolean isUpdate = jdbcTemplate.update(sqlUpdate, director.getName(), director.getId()) > 0;
+        if (!isUpdate) {
+            throw new NotFoundException("Режиссер с id = " + director.getId() + " не найден");
         }
         return director;
     }
