@@ -16,7 +16,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -108,59 +107,71 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review addLike(int id, int userId) {
-        String sqlQuery = "INSERT INTO like_review (review_id, user_id, type) VALUES (?, ?, 1)";
-        int result = jdbcTemplate.update(sqlQuery, id, userId);
-        if (result == 0) {
-            log.error("Отзыв для добавления лайка с id = {} не найден", id);
-            throw new NotFoundException("Отзыв для добавления лайка с id = " + id + " не найден");
+        if (entityIsExists(id, userId, 1)) {
+            log.error("Отзыв для добавления лайка с id = {} уже существует", id);
+            return findReviewById(id);
         }
+        String sqlQuery = "INSERT INTO like_review (review_id, user_id, type) VALUES (?, ?, 1)";
+        jdbcTemplate.update(sqlQuery, id, userId);
         return findReviewById(id);
     }
 
     @Override
     public Review addDislike(int id, int userId) {
-        String sqlQuery = "INSERT INTO like_review (review_id, user_id, type) VALUES (?, ?, -1)";
-        int result = jdbcTemplate.update(sqlQuery, id, userId);
-        if (result == 0) {
-            log.error("Отзыв для добавления дизлайка с id = {} не найден", id);
-            throw new NotFoundException("Отзыв для добавления дизлайка с id = " + id + " не найден");
+        if (entityIsExists(id, userId, -1)) {
+            log.error("Отзыв для добавления дизлайка с id = {} уже существует", id);
+            return findReviewById(id);
         }
+        String sqlQuery = "INSERT INTO like_review (review_id, user_id, type) VALUES (?, ?, -1)";
+        jdbcTemplate.update(sqlQuery, id, userId);
         return findReviewById(id);
     }
 
     @Override
     public Review deleteLike(int id, int userId) {
-        String sqlQuery = "DELETE " +
-                "FROM like_review " +
-                "WHERE review_id=? AND user_id=? AND type=1";
-        int result = jdbcTemplate.update(sqlQuery, id, userId);
-        if (result == 0) {
+        if (!entityIsExists(id, userId, 1)) {
             log.error("Отзыв для удаления лайка с id = {} не найден", id);
             throw new NotFoundException("Отзыв для удаления лайка с id = " + id + " не найден");
         }
+        String sqlQuery = "DELETE " +
+                "FROM like_review " +
+                "WHERE review_id=? AND user_id=? AND type=1";
+        jdbcTemplate.update(sqlQuery, id, userId);
         return findReviewById(id);
     }
 
     @Override
     public Review deleteDislike(int id, int userId) {
-        String sqlQuery = "DELETE " +
-                "FROM like_review " +
-                "WHERE review_id=? AND user_id=? AND type=-1";
-        int result = jdbcTemplate.update(sqlQuery, id, userId);
-        if (result == 0) {
+        if (!entityIsExists(id, userId, -1)) {
             log.error("Отзыв для удаления дизлайка с id = {} не найден", id);
             throw new NotFoundException("Отзыв для удаления дизлайка с id = " + id + " не найден");
         }
+        String sqlQuery = "DELETE " +
+                "FROM like_review " +
+                "WHERE review_id=? AND user_id=? AND type=-1";
+        jdbcTemplate.update(sqlQuery, id, userId);
         return findReviewById(id);
     }
 
+    private boolean entityIsExists(int id, int userId, int type) {
+        String sqlQuery = "SELECT review_id " +
+                "FROM like_review " +
+                "WHERE review_id=? AND user_id=? AND type=?";
+        try {
+            jdbcTemplate.queryForObject(sqlQuery, Integer.class, id, userId, type);
+            return true;
+        } catch (DataAccessException e) {
+            return false;
+        }
+    }
+
     private Map<String, Object> reviewToMap(Review review) {
-        Map<String, Object> values = new HashMap<>();
-        values.put("content", review.getContent());
-        values.put("is_positive", review.isPositive());
-        values.put("user_id", review.getUserId());
-        values.put("film_id", review.getFilmId());
-        return values;
+        return Map.of(
+                "content", review.getContent(),
+                "is_positive", review.isPositive(),
+                "user_id", review.getUserId(),
+                "film_id", review.getFilmId()
+        );
     }
 
     private Review mapRowToReview(ResultSet rs, int rowNum) throws SQLException {
