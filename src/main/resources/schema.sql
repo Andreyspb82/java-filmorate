@@ -43,7 +43,6 @@ create table if not exists films_genres (
 create table if not exists film_likes (
 	film_id integer references films (id) on delete cascade,
 	user_id integer references users (id) on delete cascade
-	--UNIQUE (user_id, film_id)  нужно далить эту строчку
 );
 
 -- новые таблицы для ТЗ 12
