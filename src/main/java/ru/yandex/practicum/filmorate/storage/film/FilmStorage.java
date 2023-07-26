@@ -13,11 +13,11 @@ public interface FilmStorage {
 
     List<Film> getFilms();
 
-    List<Film> getFilmsByGenreAndYear(Optional<Integer> genreId, Optional<Integer> year, int count);
+    List<Film> getFilmsByGenreAndYear(Optional<Integer> genreId, Optional<Integer> year);
 
-    List<Film> getFilmsByGenre(Optional<Integer> genreId, int count);
+    List<Film> getFilmsByGenre(Optional<Integer> genreId);
 
-    List<Film> getFilmsByYear(Optional<Integer> year, int count);
+    List<Film> getFilmsByYear(Optional<Integer> year);
 
     List<Film> getFilmsByUserId(int userId);
 
