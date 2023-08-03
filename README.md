@@ -2,7 +2,7 @@
 Template repository for Filmorate project.
 
 # Диаграмма базы данных
-![ER-диаграмма](https://github.com/Andreyspb82/java-filmorate/blob/add-database/Untitled_v00.png)
+![ER-диаграмма](https://github.com/Andreyspb82/java-filmorate/blob/develop/Untitled_12_002.png)
 ---
 ## Таблица *films* содержит данные о фильмах
 ### Поля таблицы:
@@ -48,6 +48,17 @@ Template repository for Filmorate project.
 * **friend_id** - id пользователя добавившегося в друзья.
 ---
 
+## ТЗ 12 спринта
+### Перечень реализованного функционала:
+* ### *"Отзывы"*
+* ### *"Поиск"*
+* ### *"Общие фильмы"*
+* ### *"Рекомендации"*
+* ### *"Лента событий"*
+* ### *"Удаление фильмов и пользователей"*
+* ### *"Фильмы по режиссёрам"*
+* ### *"Популярные фильмы"*
+---
 
   
 

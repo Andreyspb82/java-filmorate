@@ -11,16 +11,23 @@ import javax.validation.constraints.PositiveOrZero;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Mpa {
+public class Feed {
 
-    @NotNull
     @PositiveOrZero
-    private Integer id;
+    private int eventId;
+
+    @PositiveOrZero
+    private int userId;
+
+    @PositiveOrZero
+    private int entityId;
 
     @NotBlank
-    private String name;
+    private String eventType;
 
-    public Mpa(Integer id) {
-        this.id = id;
-    }
+    @NotBlank
+    private String operation;
+
+    @NotNull
+    private Long timestamp;
 }
